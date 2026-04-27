@@ -156,7 +156,7 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-100">
             <h3 className="text-lg font-bold text-stone-800 mb-4">類別支出佔比 ({yearFilter})</h3>
@@ -205,7 +205,42 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3">
+        {filteredExpenses.map((record) => (
+          <div key={record.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-stone-50 border border-stone-100">
+                  {getIcon(record.category)}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-stone-700">{CATEGORY_NAMES[record.category]}</p>
+                  <p className="text-xs text-stone-400">{record.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-base font-black text-stone-800">${record.amount.toLocaleString()}</span>
+                <button
+                  onClick={() => { if(window.confirm('確定刪除?')) onDeleteExpense(record.id); }}
+                  className="text-stone-300 hover:text-rose-500 transition p-1"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+            {record.description && (
+              <p className="text-xs text-stone-500 mt-2 pl-12">{record.description}</p>
+            )}
+          </div>
+        ))}
+        {filteredExpenses.length === 0 && (
+          <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">此年度尚無支出紀錄</div>
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-orange-100">
                 <thead className="bg-stone-100">
@@ -238,7 +273,7 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
                                 ${record.amount.toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                <button 
+                                <button
                                     onClick={() => { if(window.confirm('確定刪除?')) onDeleteExpense(record.id); }}
                                     className="text-stone-400 hover:text-rose-500 transition p-1"
                                 >

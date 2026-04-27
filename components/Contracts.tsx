@@ -18,6 +18,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
   const [searchQuery, setSearchQuery] = useState('');
   const [genRent, setGenRent] = useState(true);
   const [genDeposit, setGenDeposit] = useState(true);
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   
   const initialFormState: Tenant = {
     id: '', name: '', roomNumber: '', phone: '', email: '', moveInDate: new Date().toISOString().split('T')[0],
@@ -156,7 +157,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
             <button onClick={handleExportTenants} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-xs font-bold transition-all shadow-sm whitespace-nowrap">
                 <FileSpreadsheet size={14} /> <span className="hidden sm:inline">匯出名單</span><span className="sm:hidden">匯出</span>
             </button>
-            <button onClick={() => { setMode('ADD'); setSelectedTenantId(null); }} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-stone-900 hover:bg-black text-white rounded-lg text-xs font-bold transition-all shadow-lg hover:shadow-xl active:scale-95 whitespace-nowrap">
+            <button onClick={() => { setMode('ADD'); setSelectedTenantId(null); setMobileView('detail'); }} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-stone-900 hover:bg-black text-white rounded-lg text-xs font-bold transition-all shadow-lg hover:shadow-xl active:scale-95 whitespace-nowrap">
                 <Plus size={14} /> <span className="hidden sm:inline">新增租客</span><span className="sm:hidden">新增</span>
             </button>
         </div>
@@ -164,7 +165,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
         {/* List Panel */}
-        <div className={`lg:w-72 flex-shrink-0 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col transition-all duration-300 ${(!selectedTenantId && mode !== 'ADD') ? 'h-96 lg:h-auto' : 'h-48 lg:h-auto'}`}>
+        <div className={`lg:w-72 flex-shrink-0 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex-col transition-all duration-300 ${mobileView === 'list' ? 'flex' : 'hidden'} lg:flex lg:h-auto h-auto`}>
           <div className="p-4 bg-stone-50 border-b border-stone-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={12} />
@@ -175,7 +176,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
             {filteredTenants.length > 0 ? filteredTenants.map(t => {
               const finStatus = getTenantFinancialStatus(t.id);
               return (
-                <div key={t.id} onClick={() => { setSelectedTenantId(t.id); setMode('VIEW'); }} className={`p-4 cursor-pointer hover:bg-amber-50/40 transition-all border-l-4 ${selectedTenantId === t.id ? 'bg-amber-50 border-amber-500 shadow-sm' : 'border-transparent'}`}>
+                <div key={t.id} onClick={() => { setSelectedTenantId(t.id); setMode('VIEW'); setMobileView('detail'); }} className={`p-4 cursor-pointer hover:bg-amber-50/40 transition-all border-l-4 ${selectedTenantId === t.id ? 'bg-amber-50 border-amber-500 shadow-sm' : 'border-transparent'}`}>
                   <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${finStatus === 'OVERDUE' ? 'bg-rose-500' : finStatus === 'PENDING' ? 'bg-amber-400' : 'bg-emerald-500'}`} />
@@ -202,14 +203,19 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
         </div>
 
         {/* Detail / Edit / Add Panel */}
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col min-h-[500px]">
+        <div className={`flex-1 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex-col min-h-[500px] ${mobileView === 'detail' || mode === 'ADD' ? 'flex' : 'hidden'} lg:flex`}>
           {mode === 'ADD' || (mode === 'EDIT_INFO' && selectedTenant) ? (
              <div className="flex flex-col h-full">
                 <div className="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                    <h3 className="text-sm font-bold text-stone-800 flex items-center gap-2">
-                        {mode === 'ADD' ? <><Plus size={16}/> 新增租客資料</> : <><Edit size={16}/> 編輯租客資料</>}
-                    </h3>
-                    <button onClick={() => setMode('VIEW')} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => { setMobileView('list'); setMode('VIEW'); }} className="lg:hidden p-1 text-stone-400 hover:text-stone-600 mr-1">
+                          <Home size={16} />
+                        </button>
+                        <h3 className="text-sm font-bold text-stone-800 flex items-center gap-2">
+                            {mode === 'ADD' ? <><Plus size={16}/> 新增租客資料</> : <><Edit size={16}/> 編輯租客資料</>}
+                        </h3>
+                    </div>
+                    <button onClick={() => { setMode('VIEW'); setMobileView('list'); }} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6">
                     <form onSubmit={handleSave} className="space-y-6 max-w-3xl mx-auto">
@@ -268,18 +274,20 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
           ) : selectedTenant ? (
              <div className="flex flex-col h-full">
                 {/* View Mode Header */}
-                <div className="px-8 py-6 border-b border-stone-100 flex justify-between items-start bg-gradient-to-r from-stone-50 to-white">
-                    <div>
-                        <div className="flex items-center gap-3 mb-1">
-                            <h2 className="text-2xl font-black text-stone-800">{selectedTenant.name}</h2>
+                <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-stone-100 flex justify-between items-start bg-gradient-to-r from-stone-50 to-white gap-2">
+                    <div className="flex-1 min-w-0">
+                        <button onClick={() => setMobileView('list')} className="lg:hidden flex items-center gap-1 text-xs text-amber-600 font-bold mb-2">
+                          <ChevronRight size={12} className="rotate-180" /> 返回列表
+                        </button>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h2 className="text-xl sm:text-2xl font-black text-stone-800">{selectedTenant.name}</h2>
                             <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded uppercase">{selectedTenant.roomNumber} 室</span>
                             {selectedTenant.fingerprintId && (
                                 <span className="px-2 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded flex items-center gap-1 shadow-sm"><Fingerprint size={10}/> 指紋 #{selectedTenant.fingerprintId}</span>
                             )}
                         </div>
-                        <p className="text-sm text-stone-500 font-medium flex items-center gap-4">
+                        <p className="text-xs sm:text-sm text-stone-500 font-medium flex flex-wrap items-center gap-2 sm:gap-4">
                             <span className="flex items-center gap-1"><User size={14}/> {selectedTenant.phone}</span>
-                            <span className="w-1 h-1 bg-stone-300 rounded-full"></span>
                             <span className="flex items-center gap-1">租期: {selectedTenant.moveInDate} ~ {selectedTenant.leaseEndDate || '未定'}</span>
                         </p>
                     </div>
@@ -290,7 +298,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    <div className="p-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div className="p-4 sm:p-8 grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8">
                         {/* Financial Card */}
                         <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
                             <h4 className="text-sm font-bold text-stone-800 mb-4 flex items-center gap-2">
@@ -342,8 +350,12 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
           ) : (
              <div className="flex-1 flex flex-col items-center justify-center text-stone-300 p-8">
                 <Users size={48} className="mb-4 opacity-50" />
-                <p className="font-medium">請選擇左側租客以查看詳情</p>
+                <p className="font-medium hidden lg:block">請選擇左側租客以查看詳情</p>
+                <p className="font-medium lg:hidden">請從列表選擇租客以查看詳情</p>
                 <p className="text-xs mt-2">或點擊上方新增按鈕建立新租客資料</p>
+                <button onClick={() => setMobileView('list')} className="lg:hidden mt-4 px-4 py-2 bg-amber-600 text-white text-sm font-bold rounded-lg">
+                  返回租客列表
+                </button>
              </div>
           )}
         </div>

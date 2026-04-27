@@ -315,13 +315,20 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <div className="flex h-screen overflow-hidden bg-orange-50 font-sans">
+        {/* Mobile backdrop overlay */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-stone-900/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
         <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} user={user} onLogout={() => setUser(null)} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="md:hidden bg-white shadow-sm p-4 flex items-center justify-between z-20 border-b border-orange-100">
+          <header className="md:hidden bg-white shadow-sm p-4 flex items-center justify-between z-10 border-b border-orange-100">
              <h1 className="font-bold text-stone-800 text-sm tracking-tight">SmartLandlord</h1>
              <button onClick={() => setMobileOpen(true)} className="text-stone-600"><Menu size={20} /></button>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
             <Routes>
               <Route path="/" element={<Dashboard payments={payments} expenses={expenses} />} />
               <Route path="/financials" element={

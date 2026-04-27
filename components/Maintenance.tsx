@@ -309,9 +309,9 @@ const Maintenance: React.FC<MaintenanceProps> = ({
 
       {activeTab === 'REPAIR' ? (
         <div className="space-y-4">
-          
+
           {/* Filter Bar */}
-          <div className="bg-white p-3 rounded-lg border border-stone-200 flex flex-wrap gap-2 items-center shadow-sm">
+          <div className="bg-white p-3 rounded-lg border border-stone-200 flex flex-wrap gap-2 items-center shadow-sm overflow-x-auto">
              <div className="flex items-center gap-2 text-stone-500 text-sm font-bold mr-2">
                 <Filter size={16} /> 篩選:
              </div>
@@ -396,7 +396,69 @@ const Maintenance: React.FC<MaintenanceProps> = ({
             </div>
           )}
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          {/* Mobile card view */}
+          <div className="sm:hidden space-y-3">
+            {filteredAndSortedTickets.map(ticket => (
+              <div key={ticket.id} className={`bg-white rounded-lg shadow-sm border border-stone-200 p-4 ${selectedTicketIds.includes(ticket.id) ? 'ring-2 ring-amber-400' : ''}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <button onClick={() => toggleSelectOne(ticket.id)} className="text-stone-400 hover:text-amber-600 transition flex-shrink-0">
+                      {selectedTicketIds.includes(ticket.id) ? <CheckSquare size={18} className="text-amber-600" /> : <Square size={18} />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-stone-800 line-clamp-2">{ticket.description}</p>
+                      {ticket.notes && <p className="text-xs text-stone-400 italic mt-0.5">附註: {ticket.notes}</p>}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0 ml-2">
+                    <button onClick={() => handleOpenEditModal(ticket)} className="text-stone-400 hover:text-amber-600 transition p-1.5 rounded-full hover:bg-amber-50">
+                      <Edit size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(ticket.id)} className="text-stone-400 hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-stone-100">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 text-[10px] font-bold">
+                      {ticket.tenantName.charAt(0)}
+                    </div>
+                    <span className="text-xs text-stone-600 font-medium">{ticket.tenantName}</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded font-bold">{translateCategory(ticket.category)}</span>
+                  <span className="text-xs text-stone-500">{ticket.reportDate}</span>
+                  <span className="text-xs font-bold text-stone-700">${(ticket.cost || 0).toLocaleString()}</span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <select
+                      value={ticket.priority}
+                      onChange={(e) => handleInlinePriorityUpdate(ticket.id, e.target.value as Priority)}
+                      className={`text-xs bg-transparent border-none focus:ring-0 cursor-pointer p-0 ${getPriorityStyle(ticket.priority)}`}
+                    >
+                      <option value={Priority.LOW}>低級</option>
+                      <option value={Priority.MEDIUM}>普通</option>
+                      <option value={Priority.HIGH}>緊急</option>
+                    </select>
+                    <select
+                      value={ticket.status}
+                      onChange={(e) => onUpdateTicketStatus(ticket.id, e.target.value as MaintenanceStatus)}
+                      className={`text-[11px] font-bold py-1 px-2 rounded-full border cursor-pointer outline-none transition appearance-none shadow-sm ${getStatusStyle(ticket.status)}`}
+                    >
+                      <option value={MaintenanceStatus.OPEN}>待處理</option>
+                      <option value={MaintenanceStatus.IN_PROGRESS}>維修中</option>
+                      <option value={MaintenanceStatus.COMPLETED}>已完成</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredAndSortedTickets.length === 0 && (
+              <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">目前沒有符合條件的報修紀錄。</div>
+            )}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-orange-100">
                 <thead className="bg-stone-100">
@@ -410,7 +472,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         )}
                         </button>
                     </th>
-                    <th 
+                    <th
                         className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('date')}
                     >
@@ -418,13 +480,13 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">租客</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider min-w-[200px]">問題描述</th>
-                    <th 
+                    <th
                         className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('priority')}
                     >
                         優先級 (可改) <SortIcon colKey="priority" />
                     </th>
-                    <th 
+                    <th
                         className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('cost')}
                     >
@@ -467,7 +529,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         {ticket.notes && <p className="text-[10px] text-stone-400 mt-0.5 italic">附註: {ticket.notes}</p>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                            <select 
+                            <select
                             value={ticket.priority}
                             onChange={(e) => handleInlinePriorityUpdate(ticket.id, e.target.value as Priority)}
                             className={`text-xs bg-transparent border-none focus:ring-0 cursor-pointer p-0 pr-6 ${getPriorityStyle(ticket.priority)}`}
@@ -481,7 +543,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                             ${(ticket.cost || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                            <select 
+                            <select
                             value={ticket.status}
                             onChange={(e) => onUpdateTicketStatus(ticket.id, e.target.value as MaintenanceStatus)}
                             className={`text-xs font-bold py-1 px-3 rounded-full border cursor-pointer outline-none transition appearance-none shadow-sm ${getStatusStyle(ticket.status)}`}
@@ -493,14 +555,14 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <div className="flex justify-end gap-2">
-                            <button 
+                            <button
                                 onClick={() => handleOpenEditModal(ticket)}
                                 className="text-stone-400 hover:text-amber-600 transition p-1.5 rounded-full hover:bg-amber-50"
                                 title="完整編輯"
                             >
                                 <Edit size={16} />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => handleDelete(ticket.id)}
                                 className="text-stone-400 hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50"
                                 title="刪除"
@@ -528,64 +590,113 @@ const Maintenance: React.FC<MaintenanceProps> = ({
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-orange-100">
-                <thead className="bg-stone-100">
-                <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">型號 / 規格</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">更換週期</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">上次更換 (可編輯)</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">預計到期</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">狀態</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
-                </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-stone-100">
-                {filters.map(filter => (
-                    <tr key={filter.id} className={`${getModelBgColor(filter.model)} transition duration-200`}>
-                    <td className="px-6 py-4">
-                        <div className="text-sm font-bold text-stone-800 whitespace-nowrap">{filter.model}</div>
-                        <div className="text-xs text-stone-500 whitespace-nowrap">{filter.specification}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-stone-500">
-                        每 {filter.cycleMonths} 個月
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                            <input 
-                            type="date"
-                            value={filter.lastReplaced}
-                            onChange={(e) => handleDateChange(filter.id, e.target.value)}
-                            className="text-sm bg-transparent border-b border-dashed border-stone-400 hover:border-amber-500 focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-stone-700 transition"
-                            />
-                        </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-stone-700">{filter.nextDue}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm
-                            ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' : 
-                            filter.status === 'Due Soon' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'}`}>
-                            {filter.status === 'Overdue' ? '已過期' : filter.status === 'Due Soon' ? '即將到期' : '良好'}
-                        </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
-                            onClick={() => handleMarkReplaced(filter.id)}
-                            className="flex items-center gap-1 text-xs bg-white/80 text-stone-700 px-3 py-1.5 rounded-md border border-stone-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all font-bold shadow-sm"
-                            title="標記為今日更換"
-                        >
-                            <RefreshCw size={12} /> 一鍵更新
-                        </button>
-                    </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+        <div>
+          {/* Mobile card view for filters */}
+          <div className="sm:hidden space-y-3">
+            {filters.map(filter => (
+              <div key={filter.id} className={`rounded-lg shadow-sm border border-stone-200 p-4 ${getModelBgColor(filter.model)}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-black text-stone-800">{filter.model}</p>
+                    <p className="text-xs text-stone-500 mt-0.5">{filter.specification}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm
+                      ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' :
+                      filter.status === 'Due Soon' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'}`}>
+                      {filter.status === 'Overdue' ? '已過期' : filter.status === 'Due Soon' ? '即將到期' : '良好'}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-stone-400 font-bold mb-1">更換週期</p>
+                    <p className="text-stone-700">每 {filter.cycleMonths} 個月</p>
+                  </div>
+                  <div>
+                    <p className="text-stone-400 font-bold mb-1">預計到期</p>
+                    <p className="text-stone-700 font-bold">{filter.nextDue}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-stone-400 font-bold mb-1">上次更換（可編輯）</p>
+                    <input
+                      type="date"
+                      value={filter.lastReplaced}
+                      onChange={(e) => handleDateChange(filter.id, e.target.value)}
+                      className="text-sm bg-white/60 border border-stone-300 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-500 w-full"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleMarkReplaced(filter.id)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs bg-white/80 text-stone-700 px-3 py-2 rounded-md border border-stone-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all font-bold shadow-sm"
+                >
+                  <RefreshCw size={12} /> 一鍵標記今日更換
+                </button>
+              </div>
+            ))}
           </div>
-          <div className="p-4 bg-stone-50 flex items-center gap-2 text-[11px] text-stone-500 overflow-x-auto whitespace-nowrap">
-            <Calendar size={12} className="text-amber-500 flex-shrink-0" />
-            <span>提醒：預計到期日前 1 個月將自動轉為「即將到期」狀態。修改「上次更換日期」將自動連動計算。</span>
+
+          {/* Desktop table view for filters */}
+          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-orange-100">
+                  <thead className="bg-stone-100">
+                  <tr>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">型號 / 規格</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">更換週期</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">上次更換 (可編輯)</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">預計到期</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">狀態</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
+                  </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-stone-100">
+                  {filters.map(filter => (
+                      <tr key={filter.id} className={`${getModelBgColor(filter.model)} transition duration-200`}>
+                      <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-stone-800 whitespace-nowrap">{filter.model}</div>
+                          <div className="text-xs text-stone-500 whitespace-nowrap">{filter.specification}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-stone-500">
+                          每 {filter.cycleMonths} 個月
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                              <input
+                              type="date"
+                              value={filter.lastReplaced}
+                              onChange={(e) => handleDateChange(filter.id, e.target.value)}
+                              className="text-sm bg-transparent border-b border-dashed border-stone-400 hover:border-amber-500 focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-stone-700 transition"
+                              />
+                          </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-stone-700">{filter.nextDue}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm
+                              ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' :
+                              filter.status === 'Due Soon' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {filter.status === 'Overdue' ? '已過期' : filter.status === 'Due Soon' ? '即將到期' : '良好'}
+                          </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                              onClick={() => handleMarkReplaced(filter.id)}
+                              className="flex items-center gap-1 text-xs bg-white/80 text-stone-700 px-3 py-1.5 rounded-md border border-stone-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all font-bold shadow-sm"
+                              title="標記為今日更換"
+                          >
+                              <RefreshCw size={12} /> 一鍵更新
+                          </button>
+                      </td>
+                      </tr>
+                  ))}
+                  </tbody>
+              </table>
+            </div>
+            <div className="p-4 bg-stone-50 flex items-center gap-2 text-[11px] text-stone-500 overflow-x-auto whitespace-nowrap">
+              <Calendar size={12} className="text-amber-500 flex-shrink-0" />
+              <span>提醒：預計到期日前 1 個月將自動轉為「即將到期」狀態。修改「上次更換日期」將自動連動計算。</span>
+            </div>
           </div>
         </div>
       )}

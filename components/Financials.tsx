@@ -125,7 +125,60 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden border border-stone-200">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3">
+        {filteredPayments.map((payment) => {
+          const tenant = getTenantInfo(payment.tenantId);
+          return (
+            <div key={payment.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-amber-50 px-2 py-1 rounded">
+                    <Home size={13} className="text-amber-500" />
+                    <span className="text-xs font-bold text-amber-700">{tenant.roomNumber}</span>
+                  </div>
+                  <span className="text-sm font-bold text-stone-800">{payment.tenantName}</span>
+                </div>
+                <button onClick={() => setDeleteTargetId(payment.id)} className="text-stone-300 hover:text-rose-500 transition p-1">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg font-black text-stone-800">${payment.amount.toLocaleString()}</span>
+                    {getTypeBadge(payment.type)}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-stone-500">
+                    <Calendar size={12} />
+                    <input
+                      type="date"
+                      value={payment.dueDate}
+                      onChange={(e) => onUpdatePayment(payment.id, { dueDate: e.target.value })}
+                      className="bg-transparent border-b border-dashed border-stone-300 outline-none text-stone-600 font-medium"
+                    />
+                  </div>
+                </div>
+                <select
+                  value={payment.status}
+                  onChange={(e) => onUpdatePayment(payment.id, { status: e.target.value as PaymentStatus })}
+                  className={`text-xs font-semibold py-1.5 px-3 rounded-full border cursor-pointer outline-none transition appearance-none ${getStatusColor(payment.status)}`}
+                >
+                  <option value={PaymentStatus.PENDING}>待繳</option>
+                  <option value={PaymentStatus.PAID}>已繳</option>
+                  <option value={PaymentStatus.OVERDUE}>逾期</option>
+                </select>
+              </div>
+            </div>
+          );
+        })}
+        {filteredPayments.length === 0 && (
+          <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">無帳單資料</div>
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden border border-stone-200">
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-orange-100">
             <thead className="bg-orange-50">
@@ -163,7 +216,7 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
                     <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 group">
                             <Calendar size={14} className="text-stone-900 group-hover:text-amber-600 transition-colors" />
-                            <input 
+                            <input
                             type="date"
                             value={payment.dueDate}
                             onChange={(e) => onUpdatePayment(payment.id, { dueDate: e.target.value })}

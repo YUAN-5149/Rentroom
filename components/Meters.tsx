@@ -185,7 +185,55 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3">
+        {filteredReadings.map((reading) => (
+          <div key={reading.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-8 bg-yellow-400 rounded-sm flex-shrink-0"></div>
+                <div>
+                  <p className="text-sm font-bold text-stone-800">{reading.meterName}</p>
+                  <p className="text-xs text-stone-400">{reading.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-black text-stone-800">${reading.totalCost.toLocaleString()}</span>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTargetId(reading.id)}
+                  className="text-stone-300 hover:text-rose-500 transition p-1 rounded-full hover:bg-rose-50"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-stone-100">
+              <div className="text-center">
+                <p className="text-[10px] text-stone-400 font-bold uppercase">前次讀數</p>
+                <p className="text-sm font-bold text-stone-600 mt-0.5">{reading.previousReading}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] text-stone-400 font-bold uppercase">本次讀數</p>
+                <p className="text-sm font-bold text-stone-800 mt-0.5">{reading.currentReading}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] text-stone-400 font-bold uppercase">使用度數</p>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 mt-0.5">
+                  {reading.usage} 度
+                </span>
+              </div>
+            </div>
+            {reading.note && <p className="text-xs text-stone-400 mt-2 italic">{reading.note}</p>}
+          </div>
+        ))}
+        {filteredReadings.length === 0 && (
+          <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">尚無抄表紀錄</div>
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-orange-100">
                 <thead className="bg-stone-100">
@@ -224,7 +272,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 ${reading.totalCost.toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setDeleteTargetId(reading.id)}
                                     className="text-stone-400 hover:text-rose-500 transition p-2 rounded-full hover:bg-rose-50"
