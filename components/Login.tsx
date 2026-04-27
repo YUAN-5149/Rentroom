@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, ArrowRight, Lock, Phone } from 'lucide-react';
+import { Building, ArrowRight, Lock, Phone, Eye, EyeOff } from 'lucide-react';
 import { validatePhoneFormat } from '../services/authMock';
 
 interface LoginProps {
@@ -10,6 +10,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
   const [phone, setPhone] = useState('');
   const [validationError, setValidationError] = useState('');
+  const [showPhone, setShowPhone] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +49,27 @@ const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
                   <Phone size={18} className="text-stone-400" />
                 </div>
                 <input
-                  type="tel"
+                  type={showPhone ? 'tel' : 'password'}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition outline-none text-stone-800 font-medium"
+                  className="block w-full pl-10 pr-12 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition outline-none text-stone-800 font-medium tracking-widest"
                   placeholder="09xx-xxx-xxx"
                   autoFocus
+                  inputMode="numeric"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPhone(v => !v)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-amber-600 transition"
+                  tabIndex={-1}
+                  aria-label={showPhone ? '隱藏號碼' : '顯示號碼'}
+                >
+                  {showPhone ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              <p className="text-[11px] text-stone-400 ml-1">
+                {showPhone ? '號碼已顯示' : '號碼已隱藏 · 點擊眼睛圖示顯示'}
+              </p>
             </div>
 
             {(error || validationError) && (
