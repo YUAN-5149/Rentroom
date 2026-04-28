@@ -189,12 +189,22 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                   : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'
                 }`}
             >
-              <Home size={20} className={active ? room.color : 'text-stone-400'} />
-              <span className="mt-1 text-xs font-bold">{room.label}</span>
+              {/* 房號圓徽 — 直接顯示 1/2/3/4，視覺上一眼對應「第N間」 */}
+              <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2 transition
+                ${active
+                  ? `bg-white ${room.color} ${room.bg.split(' ')[1]} shadow`
+                  : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+                {room.id}
+              </div>
+              <span className="mt-1.5 text-xs font-bold flex items-center gap-1">
+                <Home size={11} className={active ? room.color : 'text-stone-400'} />
+                {room.label}
+              </span>
+              {/* 照片張數徽章 — 加「張」字明確表示是計數，不是房號 */}
               {count > 0 && (
-                <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shadow
-                  ${active ? 'bg-white ' + room.color : 'bg-stone-600 text-white'}`}>
-                  {count}
+                <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
+                  ${active ? 'bg-indigo-600 text-white' : 'bg-stone-600 text-white'}`}>
+                  {count}<span className="text-[8px] opacity-80">張</span>
                 </span>
               )}
             </button>
