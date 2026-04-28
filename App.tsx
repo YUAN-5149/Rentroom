@@ -1,19 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, DollarSign, FileText, Wrench, Menu, X, LogOut, Receipt, Zap } from 'lucide-react';
+import { LayoutDashboard, DollarSign, FileText, Wrench, Menu, X, LogOut, Receipt, Zap, Camera } from 'lucide-react';
 
 import Dashboard from './components/Dashboard';
 import Financials from './components/Financials';
 import Contracts from './components/Contracts';
 import Maintenance from './components/Maintenance';
 import Expenses from './components/Expenses';
-import Meters from './components/Meters'; // New Component
+import Meters from './components/Meters';
+import RoomCondition from './components/RoomCondition';
 import Login from './components/Login';
 
 import { mockPayments, mockTenants, mockTickets, mockFilters, mockExpenses, mockReadings } from './services/mockData';
 import { verifyUser, User } from './services/authMock';
-import { PaymentRecord, PaymentStatus, MaintenanceTicket, MaintenanceStatus, Tenant, ExpenseRecord, FilterSchedule, MeterReading } from './types';
+import { PaymentRecord, PaymentStatus, MaintenanceTicket, MaintenanceStatus, Tenant, ExpenseRecord, FilterSchedule, MeterReading, RoomPhoto } from './types';
 import { 
   syncTenantToSheet, fetchTenantsFromSheet, 
   syncExpenseToSheet, fetchExpensesFromSheet,
@@ -42,6 +43,7 @@ const Sidebar = ({
     { path: '/financials', label: '財務管理', icon: DollarSign },
     { path: '/maintenance', label: '維修管理', icon: Wrench },
     { path: '/meters', label: '電表管理', icon: Zap },
+    { path: '/room-condition', label: '套房原狀', icon: Camera },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -124,6 +126,11 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : mockReadings;
   });
 
+  const [roomPhotos, setRoomPhotos] = useState<RoomPhoto[]>(() => {
+    const saved = localStorage.getItem('sl_room_photos_v1');
+    return saved !== null ? JSON.parse(saved) : [];
+  });
+
   // Load from Google Sheets on mount
   useEffect(() => {
     const loadFromCloud = async () => {
@@ -164,6 +171,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('sl_expenses_v2', JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem('sl_filters_v2', JSON.stringify(filters)); }, [filters]);
   useEffect(() => { localStorage.setItem('sl_meters_v2', JSON.stringify(meterReadings)); }, [meterReadings]);
+  useEffect(() => { localStorage.setItem('sl_room_photos_v1', JSON.stringify(roomPhotos)); }, [roomPhotos]);
 
   const handleLogin = (phone: string) => {
     const verifiedUser = verifyUser(phone);
@@ -310,6 +318,19 @@ const App: React.FC = () => {
     syncMeterToSheet('DELETE', { id });
   };
 
+  // Room Condition Handlers
+  const handleAddRoomPhotos = (newPhotos: RoomPhoto[]) => {
+    setRoomPhotos(prev => [...newPhotos, ...prev]);
+  };
+
+  const handleUpdateRoomCaption = (id: string, caption: string) => {
+    setRoomPhotos(prev => prev.map(p => p.id === id ? { ...p, caption } : p));
+  };
+
+  const handleDeleteRoomPhoto = (id: string) => {
+    setRoomPhotos(prev => prev.filter(p => p.id !== id));
+  };
+
   if (!user) return <Login onLogin={handleLogin} error={loginError} />;
 
   return (
@@ -361,6 +382,14 @@ const App: React.FC = () => {
                   onAddTenant={handleAddTenant} 
                   onUpdateTenant={handleUpdateTenant} 
                   onDeleteTenant={handleDeleteTenant} 
+                />
+              } />
+              <Route path="/room-condition" element={
+                <RoomCondition
+                  photos={roomPhotos}
+                  onAddPhotos={handleAddRoomPhotos}
+                  onUpdateCaption={handleUpdateRoomCaption}
+                  onDeletePhoto={handleDeleteRoomPhoto}
                 />
               } />
               <Route path="/maintenance" element={
