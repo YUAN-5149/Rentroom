@@ -88,3 +88,14 @@ export interface MeterReading {
   totalCost: number;
   note?: string;
 }
+
+export type RoomId = '1' | '2' | '3' | '4';
+
+export interface RoomPhoto {
+  id: string;
+  roomId: RoomId;
+  imageData: string;   // base64 data URL
+  caption: string;
+  uploadedAt: string;  // ISO datetime string
+  fileName: string;
+}
