@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { RoomPhoto, RoomId } from '../types';
 import {
   Camera, Plus, Trash2, ImageOff, Upload,
@@ -22,6 +22,10 @@ const ROOMS: { id: RoomId; label: string; color: string; bg: string }[] = [
 
 const MAX_FILE_MB = 5;
 
+// Unique IDs for hidden inputs (keyed by room so switching rooms resets selection)
+const photoInputId = (room: RoomId) => `room-photo-input-${room}`;
+const cameraInputId = (room: RoomId) => `room-camera-input-${room}`;
+
 const RoomCondition: React.FC<RoomConditionProps> = ({
   photos, onAddPhotos, onUpdateCaption, onDeletePhoto
 }) => {
@@ -30,7 +34,6 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
   const [lightbox, setLightbox] = useState<RoomPhoto | null>(null);
   const [captions, setCaptions] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const roomPhotos = photos.filter(p => p.roomId === selectedRoom)
     .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
@@ -76,7 +79,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) handleFiles(e.target.files);
-    e.target.value = '';
+    e.target.value = ''; // reset so same file can be re-selected
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -109,8 +112,28 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
 
   return (
     <div className="space-y-6">
+
+      {/* Hidden file inputs — label-based trigger works on iOS/Android/desktop */}
+      <input
+        id={photoInputId(selectedRoom)}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleFileInput}
+      />
+      {/* Camera-capture input: opens camera directly on mobile */}
+      <input
+        id={cameraInputId(selectedRoom)}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileInput}
+      />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-stone-200 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-stone-200 gap-3">
         <div className="flex items-center gap-3">
           <div className="bg-indigo-100 p-2.5 rounded-lg text-indigo-600">
             <Camera size={22} />
@@ -121,26 +144,34 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
           </div>
         </div>
 
-        {/* Upload Button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg text-sm font-bold transition shadow-sm active:scale-95 whitespace-nowrap w-full sm:w-auto justify-center"
-        >
-          {uploading ? (
-            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> 上傳中...</>
-          ) : (
-            <><Upload size={16} /> 上傳照片</>
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handleFileInput}
-        />
+        {/* Upload buttons — <label htmlFor> reliably opens system file/photo picker */}
+        <div className="flex gap-2 w-full sm:w-auto">
+          <label
+            htmlFor={photoInputId(selectedRoom)}
+            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shadow-sm active:scale-95 whitespace-nowrap flex-1 sm:flex-none cursor-pointer select-none
+              ${uploading
+                ? 'bg-indigo-300 text-white pointer-events-none'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+          >
+            {uploading ? (
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> 上傳中...</>
+            ) : (
+              <><Upload size={16} /> 選擇照片</>
+            )}
+          </label>
+
+          {/* Camera shortcut — directly opens camera on mobile; falls back to file picker on desktop */}
+          <label
+            htmlFor={cameraInputId(selectedRoom)}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition shadow-sm active:scale-95 whitespace-nowrap cursor-pointer select-none
+              ${uploading
+                ? 'bg-stone-200 text-stone-400 pointer-events-none'
+                : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200'}`}
+            title="直接拍照上傳（手機）"
+          >
+            <Camera size={16} /> <span className="hidden xs:inline">拍照</span>
+          </label>
+        </div>
       </div>
 
       {/* Room Tabs */}
@@ -179,9 +210,9 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
         className={`rounded-xl transition-all ${dragging ? 'ring-4 ring-indigo-400 ring-offset-2 bg-indigo-50/40' : ''}`}
       >
         {roomPhotos.length === 0 ? (
-          /* Empty State */
-          <div
-            onClick={() => fileInputRef.current?.click()}
+          /* Empty State — entire area is a label for reliable tap-to-open on mobile */
+          <label
+            htmlFor={photoInputId(selectedRoom)}
             className="flex flex-col items-center justify-center gap-4 p-12 rounded-xl border-2 border-dashed border-stone-300 bg-white cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group"
           >
             <div className={`p-5 rounded-full ${currentRoom.bg} transition-transform group-hover:scale-110`}>
@@ -195,7 +226,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
             <span className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold ${currentRoom.bg} ${currentRoom.color} border ${currentRoom.bg.replace('bg-','border-').replace('-50','-300')}`}>
               <Plus size={16} /> 新增照片
             </span>
-          </div>
+          </label>
         ) : (
           <div className="space-y-4">
             {/* Summary bar */}
@@ -203,12 +234,12 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
               <span className={`text-sm font-bold ${currentRoom.color}`}>
                 {currentRoom.label} · 共 {roomPhotos.length} 張照片
               </span>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-white/80 hover:bg-white transition ${currentRoom.color}`}
+              <label
+                htmlFor={photoInputId(selectedRoom)}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-white/80 hover:bg-white transition cursor-pointer select-none ${currentRoom.color}`}
               >
                 <Plus size={13} /> 繼續新增
-              </button>
+              </label>
             </div>
 
             {/* Photo Grid */}
@@ -291,16 +322,16 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                 </div>
               ))}
 
-              {/* Add more card */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
+              {/* Add more card — label for reliable tap-to-open */}
+              <label
+                htmlFor={photoInputId(selectedRoom)}
                 className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-stone-200 bg-stone-50 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all min-h-[200px] group"
               >
                 <div className={`p-3 rounded-full ${currentRoom.bg} group-hover:scale-110 transition-transform`}>
                   <Plus size={22} className={currentRoom.color} />
                 </div>
                 <p className="text-xs font-bold text-stone-400 group-hover:text-indigo-600 transition">新增更多照片</p>
-              </div>
+              </label>
             </div>
           </div>
         )}
