@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { MeterReading } from '../types';
-import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle } from 'lucide-react';
+import { MeterReading, RoomId } from '../types';
+import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle, Home } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface MetersProps {
@@ -10,11 +10,37 @@ interface MetersProps {
   onDeleteReading: (id: string) => void;
 }
 
+// 房間方塊定義（配色與「套房原狀」一致）
+const ROOMS: { id: RoomId; label: string; color: string; bg: string; ring: string }[] = [
+  { id: '1', label: '第一間', color: 'text-sky-700',     bg: 'bg-sky-50',     ring: 'border-sky-300'     },
+  { id: '2', label: '第二間', color: 'text-emerald-700', bg: 'bg-emerald-50', ring: 'border-emerald-300' },
+  { id: '3', label: '第三間', color: 'text-amber-700',   bg: 'bg-amber-50',   ring: 'border-amber-300'   },
+  { id: '4', label: '第四間', color: 'text-rose-700',    bg: 'bg-rose-50',    ring: 'border-rose-300'    },
+];
+
+// 由 meterName 推斷房號（用於舊資料；找不到時回傳 undefined）
+const inferRoomId = (meterName: string): RoomId | undefined => {
+  if (!meterName) return undefined;
+  const s = meterName.toUpperCase();
+  // 優先比對「第一/二/三/四」「1/2/3/4 室」「A/B/C/D 室」「室1/2…」
+  if (/第一|一室|1\s*室|室\s*1|\bA\s*室|\bROOM\s*1|\bR1\b/.test(s)) return '1';
+  if (/第二|二室|2\s*室|室\s*2|\bB\s*室|\bROOM\s*2|\bR2\b/.test(s)) return '2';
+  if (/第三|三室|3\s*室|室\s*3|\bC\s*室|\bROOM\s*3|\bR3\b/.test(s)) return '3';
+  if (/第四|四室|4\s*室|室\s*4|\bD\s*室|\bROOM\s*4|\bR4\b/.test(s)) return '4';
+  return undefined;
+};
+
+// 取得 reading 的房號（優先用顯式 roomId，否則由 meterName 推斷）
+const getRoomId = (r: MeterReading): RoomId | undefined =>
+  r.roomId ?? inferRoomId(r.meterName);
+
 const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  // 'all' = 全部、'1'~'4' = 該間、'unassigned' = 未分類
+  const [selectedTab, setSelectedTab] = useState<'all' | RoomId | 'unassigned'>('all');
+
   // 預設表單狀態
   const [formData, setFormData] = useState<Partial<MeterReading>>({
     meterName: '',
@@ -22,7 +48,8 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
     currentReading: 0,
     previousReading: 0,
     ratePerKwh: 5.5, // 預設每度 5.5 元
-    note: ''
+    note: '',
+    roomId: undefined
   });
 
   // 取得所有不重複的電表名稱
@@ -38,13 +65,36 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
     return (totalRate / readings.length).toFixed(1);
   }, [readings]);
 
-  // 過濾顯示資料
+  // 各間數量統計（含未分類）
+  const countsByRoom = useMemo(() => {
+    const counts: Record<RoomId | 'unassigned', number> = { '1': 0, '2': 0, '3': 0, '4': 0, unassigned: 0 };
+    readings.forEach(r => {
+      const rid = getRoomId(r);
+      if (rid) counts[rid]++;
+      else counts.unassigned++;
+    });
+    return counts;
+  }, [readings]);
+
+  // 過濾顯示資料：搜尋 + 房間分頁
   const filteredReadings = useMemo(() => {
-    return readings.filter(r => 
-      r.meterName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      r.date.includes(searchQuery)
-    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [readings, searchQuery]);
+    return readings
+      .filter(r => {
+        // 房間分頁過濾
+        const rid = getRoomId(r);
+        if (selectedTab === 'all') {
+          // 全部：不過濾
+        } else if (selectedTab === 'unassigned') {
+          if (rid) return false;
+        } else {
+          if (rid !== selectedTab) return false;
+        }
+        // 搜尋過濾
+        return r.meterName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               r.date.includes(searchQuery);
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [readings, searchQuery, selectedTab]);
 
   // 當選擇電表名稱時，自動帶入上次讀數
   const handleMeterNameChange = (name: string) => {
@@ -84,7 +134,8 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
       usage: usage,
       ratePerKwh: Number(formData.ratePerKwh),
       totalCost: totalCost,
-      note: formData.note
+      note: formData.note,
+      roomId: formData.roomId
     };
 
     onAddReading(newReading);
@@ -94,7 +145,8 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
       meterName: '',
       currentReading: 0,
       previousReading: 0,
-      note: ''
+      note: '',
+      roomId: undefined
     });
   };
 
@@ -143,8 +195,13 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
               className="pl-9 pr-4 py-2 border border-stone-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-auto"
             />
           </div>
-          <button 
-              onClick={() => setIsModalOpen(true)}
+          <button
+              onClick={() => {
+                // 進入新增畫面時，把目前分頁的房號帶到表單預設值
+                const presetRoom = (selectedTab === 'all' || selectedTab === 'unassigned') ? undefined : selectedTab;
+                setFormData(prev => ({ ...prev, roomId: presetRoom }));
+                setIsModalOpen(true);
+              }}
               className="flex-1 flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-md text-sm transition shadow-sm whitespace-nowrap"
           >
               <Plus size={16} /> 新增抄表
@@ -185,13 +242,97 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
         </div>
       </div>
 
+      {/* 房間方塊圖示分頁 */}
+      <div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {/* 全部 */}
+          <button
+            onClick={() => setSelectedTab('all')}
+            className={`relative flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all font-bold shadow-sm
+              ${selectedTab === 'all'
+                ? 'bg-stone-800 text-white border-stone-800 shadow-md scale-[1.03]'
+                : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'}`}
+          >
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2
+              ${selectedTab === 'all' ? 'bg-white text-stone-800 border-white' : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+              全
+            </div>
+            <span className="mt-1.5 text-xs font-bold">全部</span>
+            {readings.length > 0 && (
+              <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
+                ${selectedTab === 'all' ? 'bg-amber-400 text-stone-900' : 'bg-stone-600 text-white'}`}>
+                {readings.length}<span className="text-[8px] opacity-80">筆</span>
+              </span>
+            )}
+          </button>
+
+          {/* 第一~第四間 */}
+          {ROOMS.map(room => {
+            const count = countsByRoom[room.id];
+            const active = selectedTab === room.id;
+            return (
+              <button
+                key={room.id}
+                onClick={() => setSelectedTab(room.id)}
+                className={`relative flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all font-bold shadow-sm
+                  ${active
+                    ? `${room.bg} ${room.color} ${room.ring} shadow-md scale-[1.03]`
+                    : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'}`}
+              >
+                <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2 transition
+                  ${active
+                    ? `bg-white ${room.color} ${room.ring} shadow`
+                    : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+                  {room.id}
+                </div>
+                <span className="mt-1.5 text-xs font-bold flex items-center gap-1">
+                  <Home size={11} className={active ? room.color : 'text-stone-400'} />
+                  {room.label}
+                </span>
+                {count > 0 && (
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
+                    ${active ? 'bg-amber-500 text-white' : 'bg-stone-600 text-white'}`}>
+                    {count}<span className="text-[8px] opacity-80">筆</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 未分類提示（僅當有未歸類資料時顯示）*/}
+        {countsByRoom.unassigned > 0 && (
+          <button
+            onClick={() => setSelectedTab('unassigned')}
+            className={`mt-2 w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition
+              ${selectedTab === 'unassigned'
+                ? 'bg-stone-800 text-white border-stone-800'
+                : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}`}
+          >
+            <AlertTriangle size={12} /> 未分類 ({countsByRoom.unassigned})
+          </button>
+        )}
+      </div>
+
       {/* Mobile card view */}
       <div className="sm:hidden space-y-3">
-        {filteredReadings.map((reading) => (
+        {filteredReadings.map((reading) => {
+          const rid = getRoomId(reading);
+          const room = rid ? ROOMS.find(r => r.id === rid) : undefined;
+          return (
           <div key={reading.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-2 h-8 bg-yellow-400 rounded-sm flex-shrink-0"></div>
+                {/* 房號圓徽 */}
+                {room ? (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm border-2 flex-shrink-0 ${room.bg} ${room.color} ${room.ring}`}>
+                    {room.id}
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 bg-stone-100 text-stone-400 border-stone-200 flex-shrink-0">
+                    ?
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-bold text-stone-800">{reading.meterName}</p>
                   <p className="text-xs text-stone-400">{reading.date}</p>
@@ -226,7 +367,8 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
             </div>
             {reading.note && <p className="text-xs text-stone-400 mt-2 italic">{reading.note}</p>}
           </div>
-        ))}
+          );
+        })}
         {filteredReadings.length === 0 && (
           <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">尚無抄表紀錄</div>
         )}
@@ -247,14 +389,26 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-stone-100">
-                    {filteredReadings.map((reading) => (
+                    {filteredReadings.map((reading) => {
+                        const rid = getRoomId(reading);
+                        const room = rid ? ROOMS.find(r => r.id === rid) : undefined;
+                        return (
                         <tr key={reading.id} className="hover:bg-amber-50/30 transition">
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-8 bg-yellow-400 rounded-sm"></div>
+                                    {/* 房號圓徽 */}
+                                    {room ? (
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs border-2 flex-shrink-0 ${room.bg} ${room.color} ${room.ring}`} title={room.label}>
+                                            {room.id}
+                                        </div>
+                                    ) : (
+                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs border-2 bg-stone-100 text-stone-400 border-stone-200 flex-shrink-0" title="未分類">
+                                            ?
+                                        </div>
+                                    )}
                                     <span className="text-sm font-bold text-stone-700">{reading.meterName}</span>
                                 </div>
-                                {reading.note && <p className="text-xs text-stone-400 pl-4 mt-1">{reading.note}</p>}
+                                {reading.note && <p className="text-xs text-stone-400 pl-9 mt-1">{reading.note}</p>}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600 font-medium">
                                 {reading.date}
@@ -282,7 +436,8 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 </button>
                             </td>
                         </tr>
-                    ))}
+                        );
+                    })}
                     {filteredReadings.length === 0 && (
                         <tr>
                             <td colSpan={6} className="px-6 py-12 text-center text-stone-400 italic">尚無抄表紀錄</td>
@@ -303,6 +458,38 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* 套房選擇器 */}
+                        <div>
+                            <label className="block text-sm font-bold text-stone-700 mb-2">所屬套房</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {ROOMS.map(room => {
+                                    const active = formData.roomId === room.id;
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={room.id}
+                                            onClick={() => setFormData({ ...formData, roomId: room.id })}
+                                            className={`relative flex flex-col items-center py-2.5 rounded-lg border-2 transition font-bold text-xs
+                                                ${active
+                                                    ? `${room.bg} ${room.color} ${room.ring} shadow`
+                                                    : 'bg-white border-stone-200 text-stone-400 hover:border-stone-300'}`}
+                                        >
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-sm
+                                                ${active ? `bg-white ${room.color} border-2 ${room.ring}` : 'bg-stone-100 text-stone-400'}`}>
+                                                {room.id}
+                                            </div>
+                                            <span className="mt-1">{room.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {!formData.roomId && (
+                                <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1">
+                                    <AlertTriangle size={11} /> 請選擇所屬套房
+                                </p>
+                            )}
+                        </div>
+
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-1">電表名稱/房號</label>
                             <div className="relative">
@@ -391,7 +578,11 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
                             />
                         </div>
-                        <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2">
+                        <button
+                            type="submit"
+                            disabled={!formData.roomId}
+                            className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2"
+                        >
                             <Save size={18} /> 儲存紀錄
                         </button>
                     </form>

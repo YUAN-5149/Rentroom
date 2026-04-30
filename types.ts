@@ -87,6 +87,7 @@ export interface MeterReading {
   ratePerKwh: number;
   totalCost: number;
   note?: string;
+  roomId?: RoomId;   // 套房編號 1/2/3/4（舊資料可能無此欄位，由 meterName 推斷）
 }
 
 export type RoomId = '1' | '2' | '3' | '4';
