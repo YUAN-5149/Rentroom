@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, DollarSign, FileText, Wrench, Menu, X, LogOut, Receipt, Zap, Camera } from 'lucide-react';
+import { LayoutDashboard, DollarSign, FileText, Wrench, Menu, X, LogOut, Receipt, Zap, Camera, Coffee, ChevronRight } from 'lucide-react';
 
 import Dashboard from './components/Dashboard';
 import Financials from './components/Financials';
@@ -49,44 +49,77 @@ const Sidebar = ({
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-stone-900 text-stone-100 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:inset-auto flex flex-col`}>
-      <div className="flex items-center justify-between p-6 border-b border-stone-700">
-        <h1 className="text-xl font-bold tracking-wider text-amber-500">SmartLandlord</h1>
-        <button onClick={() => setMobileOpen(false)} className="md:hidden text-stone-400">
-          <X size={24} />
-        </button>
-      </div>
-      <nav className="p-4 space-y-2 flex-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path) ? 'bg-amber-600 text-white shadow-lg' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'}`}
+    <aside
+      className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:inset-auto flex flex-col bg-surface border-r border-line shadow-warm`}
+      style={{
+        backgroundImage:
+          'radial-gradient(circle at 10% 0%, rgba(242,217,192,0.33) 0%, transparent 40%), radial-gradient(circle at 90% 100%, rgba(221,227,201,0.40) 0%, transparent 35%)',
+      }}
+    >
+      {/* Brand */}
+      <div className="flex items-center justify-between gap-3 px-5 pt-7 pb-5 border-b border-dashed border-line mx-1">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-[14px] bg-accent text-white grid place-items-center shadow-warm-lg"
+            style={{ transform: 'rotate(-4deg)' }}
           >
-            <item.icon size={20} />
-            <span className="font-medium text-sm">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-      <div className="p-6 border-t border-stone-700 bg-stone-900">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-full bg-amber-600 flex items-center justify-center font-bold text-white shadow-md">
-            {user.name.charAt(0)}
+            <Coffee size={22} strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-sm font-medium text-stone-200">{user.name}</p>
-            <p className="text-[10px] text-stone-500">{user.role === 'ADMIN' ? '管理員' : '一般用戶'}</p>
+            <div className="font-hand text-[24px] text-ink leading-none font-bold">家管小屋</div>
+            <div className="text-[10.5px] text-ink-mute tracking-[1.5px] mt-0.5">HOME · MANAGE · CARE</div>
           </div>
         </div>
-        <button 
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 text-xs text-stone-400 hover:text-rose-400 hover:bg-stone-800 py-2 rounded transition"
-        >
-          <LogOut size={12} /> 登出系統
+        <button onClick={() => setMobileOpen(false)} className="md:hidden text-ink-mute hover:text-ink p-1">
+          <X size={20} />
         </button>
       </div>
-    </div>
+
+      {/* Nav */}
+      <nav className="px-3 pt-4 pb-2 flex flex-col gap-1 flex-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all
+                ${active
+                  ? 'bg-accent text-white font-semibold shadow-warm-lg'
+                  : 'text-ink-soft hover:bg-surface-warm hover:text-ink font-medium'}`}
+            >
+              <item.icon size={18} strokeWidth={1.7} />
+              <span className="flex-1">{item.label}</span>
+              {active && <ChevronRight size={14} strokeWidth={2.2} />}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User card */}
+      <div className="m-3 mb-2 p-3.5 rounded-[14px] bg-surface-warm border border-line">
+        <div className="flex items-center gap-3 mb-2.5">
+          <div className="w-9 h-9 rounded-full bg-leaf grid place-items-center font-bold text-white text-[15px]">
+            {user.name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-ink truncate">{user.name}</p>
+            <p className="text-[10.5px] text-ink-mute mt-px">{user.role === 'ADMIN' ? '管理員' : '一般用戶'} · 在線</p>
+          </div>
+        </div>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-1.5 text-[11.5px] text-ink-soft hover:text-accent py-1.5 rounded-lg transition"
+        >
+          <LogOut size={13} strokeWidth={1.7} /> 登出系統
+        </button>
+      </div>
+
+      <div className="text-center text-[10px] text-ink-mute pb-3 font-hand">
+        —— with care, since 2024 ——
+      </div>
+    </aside>
   );
 };
 
@@ -335,21 +368,28 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <div className="flex h-screen overflow-hidden bg-orange-50 font-sans">
+      <div className="flex h-screen overflow-hidden bg-bg font-sans text-ink">
         {/* Mobile backdrop overlay */}
         {mobileOpen && (
           <div
-            className="fixed inset-0 z-20 bg-stone-900/50 md:hidden"
+            className="fixed inset-0 z-20 bg-warm-600/40 backdrop-blur-sm md:hidden"
             onClick={() => setMobileOpen(false)}
           />
         )}
         <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} user={user} onLogout={() => setUser(null)} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="md:hidden bg-white shadow-sm p-4 flex items-center justify-between z-10 border-b border-orange-100">
-             <h1 className="font-bold text-stone-800 text-sm tracking-tight">SmartLandlord</h1>
-             <button onClick={() => setMobileOpen(true)} className="text-stone-600"><Menu size={20} /></button>
+          <header className="md:hidden bg-surface p-4 flex items-center justify-between z-10 border-b border-line">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-[10px] bg-accent text-white grid place-items-center" style={{ transform: 'rotate(-4deg)' }}>
+                <Coffee size={16} strokeWidth={1.8} />
+              </div>
+              <h1 className="font-hand text-[20px] text-ink leading-none font-bold">家管小屋</h1>
+            </div>
+            <button onClick={() => setMobileOpen(true)} className="text-ink-soft hover:text-ink p-1.5 rounded-lg hover:bg-surface-warm">
+              <Menu size={20} />
+            </button>
           </header>
-          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard payments={payments} expenses={expenses} />} />
               <Route path="/financials" element={
