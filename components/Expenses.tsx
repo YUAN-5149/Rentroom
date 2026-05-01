@@ -89,8 +89,8 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
       case 'Electricity': return <Zap size={18} className="text-yellow-500" />;
       case 'Gas': return <Flame size={18} className="text-orange-500" />;
       case 'Internet': return <Wifi size={18} className="text-indigo-500" />;
-      case 'Cleaning': return <Sparkles size={18} className="text-emerald-500" />;
-      default: return <HelpCircle size={18} className="text-stone-400" />;
+      case 'Cleaning': return <Sparkles size={18} className="text-leaf" />;
+      default: return <HelpCircle size={18} className="text-ink-mute" />;
     }
   };
 
@@ -113,29 +113,29 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-4 rounded-lg shadow-sm border-b-2 border-orange-100 gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-surface p-4 rounded-lg shadow-warm-sm border-b-2 border-line gap-4">
         <div className="flex items-center gap-3">
             <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
                 <Receipt size={24} />
             </div>
-            <h2 className="text-2xl font-bold text-stone-800">費用支出管理</h2>
+            <h2 className="font-serif text-2xl font-bold text-ink">費用支出管理</h2>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
-          <div className="flex items-center bg-white border border-stone-300 rounded-md p-0.5 shadow-sm justify-center">
+          <div className="flex items-center bg-surface border border-line rounded-md p-0.5 shadow-warm-sm justify-center">
              <button 
                onClick={() => changeYear(-1)}
-               className="p-1.5 hover:bg-stone-100 rounded text-stone-500 hover:text-stone-800 transition"
+               className="p-1.5 hover:bg-surface-warm rounded text-ink-soft hover:text-ink transition"
                title="上一年"
              >
                <ChevronLeft size={16} />
              </button>
-             <span className="px-3 py-1 text-sm font-bold text-stone-800 select-none min-w-[5rem] text-center">
+             <span className="px-3 py-1 text-sm font-bold text-ink select-none min-w-[5rem] text-center">
                {yearFilter} 年度
              </span>
              <button 
                onClick={() => changeYear(1)}
-               className="p-1.5 hover:bg-stone-100 rounded text-stone-500 hover:text-stone-800 transition"
+               className="p-1.5 hover:bg-surface-warm rounded text-ink-soft hover:text-ink transition"
                title="下一年"
              >
                <ChevronRight size={16} />
@@ -145,11 +145,11 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
           <div className="flex gap-2">
             <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-md text-sm transition shadow-sm whitespace-nowrap"
+                className="flex-1 flex items-center justify-center gap-2 bg-stone-800 hover:bg-ink text-white px-4 py-2 rounded-md text-sm transition shadow-warm-sm whitespace-nowrap"
             >
                 <Plus size={16} /> 新增支出
             </button>
-            <button onClick={handleExport} className="flex-1 px-4 py-2 bg-white border border-stone-300 rounded-md text-sm font-bold text-stone-600 hover:bg-stone-50 whitespace-nowrap">
+            <button onClick={handleExport} className="flex-1 px-4 py-2 bg-surface border border-line rounded-md text-sm font-bold text-ink-soft hover:bg-bg whitespace-nowrap">
                 匯出 Excel
             </button>
           </div>
@@ -158,8 +158,8 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Pie Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-100">
-            <h3 className="text-lg font-bold text-stone-800 mb-4">類別支出佔比 ({yearFilter})</h3>
+        <div className="bg-surface p-6 rounded-lg shadow-warm-sm border border-line">
+            <h3 className="font-serif text-lg font-bold text-ink mb-4">類別支出佔比 ({yearFilter})</h3>
             <div className="h-64">
                 {pieData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -181,13 +181,13 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
-                ) : <div className="h-full flex items-center justify-center text-stone-400">尚無資料</div>}
+                ) : <div className="h-full flex items-center justify-center text-ink-mute">尚無資料</div>}
             </div>
         </div>
 
         {/* Bar Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-100">
-            <h3 className="text-lg font-bold text-stone-800 mb-4">月度支出趨勢</h3>
+        <div className="bg-surface p-6 rounded-lg shadow-warm-sm border border-line">
+            <h3 className="font-serif text-lg font-bold text-ink mb-4">月度支出趨勢</h3>
             <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={barData}>
@@ -208,74 +208,74 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
       {/* Mobile card view */}
       <div className="sm:hidden space-y-3">
         {filteredExpenses.map((record) => (
-          <div key={record.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+          <div key={record.id} className="bg-surface rounded-lg shadow-warm-sm border border-line p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-stone-50 border border-stone-100">
+                <div className="p-2 rounded-full bg-bg border border-line">
                   {getIcon(record.category)}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-stone-700">{CATEGORY_NAMES[record.category]}</p>
-                  <p className="text-xs text-stone-400">{record.date}</p>
+                  <p className="text-sm font-bold text-ink">{CATEGORY_NAMES[record.category]}</p>
+                  <p className="text-xs text-ink-mute">{record.date}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-base font-black text-stone-800">${record.amount.toLocaleString()}</span>
+                <span className="text-base font-black text-ink">${record.amount.toLocaleString()}</span>
                 <button
                   onClick={() => { if(window.confirm('確定刪除?')) onDeleteExpense(record.id); }}
-                  className="text-stone-300 hover:text-rose-500 transition p-1"
+                  className="text-ink-mute hover:text-rose-500 transition p-1"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             </div>
             {record.description && (
-              <p className="text-xs text-stone-500 mt-2 pl-12">{record.description}</p>
+              <p className="text-xs text-ink-soft mt-2 pl-12">{record.description}</p>
             )}
           </div>
         ))}
         {filteredExpenses.length === 0 && (
-          <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">此年度尚無支出紀錄</div>
+          <div className="bg-surface rounded-lg p-12 text-center text-ink-mute italic">此年度尚無支出紀錄</div>
         )}
       </div>
 
       {/* Desktop table view */}
-      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+      <div className="hidden sm:block bg-surface rounded-lg shadow-warm overflow-hidden">
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-orange-100">
-                <thead className="bg-stone-100">
+            <table className="min-w-full divide-y divide-line">
+                <thead className="bg-surface-warm">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">類別</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">日期</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">說明</th>
-                        <th className="px-6 py-3 text-right text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">金額</th>
-                        <th className="px-6 py-3 text-right text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">類別</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">日期</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">說明</th>
+                        <th className="px-6 py-3 text-right text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">金額</th>
+                        <th className="px-6 py-3 text-right text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-stone-100">
+                <tbody className="bg-surface divide-y divide-line">
                     {filteredExpenses.map((record) => (
-                        <tr key={record.id} className="hover:bg-amber-50/30 transition">
+                        <tr key={record.id} className="hover:bg-accent-soft/40/30 transition">
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 rounded-full bg-stone-50 border border-stone-100">
+                                    <div className="p-1.5 rounded-full bg-bg border border-line">
                                         {getIcon(record.category)}
                                     </div>
-                                    <span className="text-sm font-bold text-stone-700">{CATEGORY_NAMES[record.category]}</span>
+                                    <span className="text-sm font-bold text-ink">{CATEGORY_NAMES[record.category]}</span>
                                 </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600 font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-ink-soft font-medium">
                                 {record.date}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-ink-soft">
                                 {record.description || '-'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-stone-800">
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-ink">
                                 ${record.amount.toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                 <button
                                     onClick={() => { if(window.confirm('確定刪除?')) onDeleteExpense(record.id); }}
-                                    className="text-stone-400 hover:text-rose-500 transition p-1"
+                                    className="text-ink-mute hover:text-rose-500 transition p-1"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -284,7 +284,7 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
                     ))}
                     {filteredExpenses.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-stone-400 italic">此年度尚無支出紀錄</td>
+                            <td colSpan={5} className="px-6 py-12 text-center text-ink-mute italic">此年度尚無支出紀錄</td>
                         </tr>
                     )}
                 </tbody>
@@ -294,23 +294,23 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
 
       {/* Add Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-orange-50 shrink-0">
-                    <h3 className="text-lg font-bold text-stone-800">新增支出項目</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+            <div className="bg-surface rounded-cozy shadow-warm-xl max-w-sm w-full overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="px-6 py-4 border-b border-line flex justify-between items-center bg-bg shrink-0">
+                    <h3 className="font-serif text-lg font-bold text-ink">新增支出項目</h3>
+                    <button onClick={() => setIsModalOpen(false)} className="text-ink-mute hover:text-ink-soft"><X size={20} /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">費用類別</label>
+                            <label className="block text-sm font-bold text-ink mb-1">費用類別</label>
                             <div className="grid grid-cols-2 gap-2">
                                 {(['Water', 'Electricity', 'Gas', 'Internet', 'Cleaning', 'Other'] as ExpenseCategory[]).map(cat => (
                                     <button
                                         key={cat}
                                         type="button"
                                         onClick={() => setFormData({...formData, category: cat})}
-                                        className={`flex items-center gap-2 p-2 rounded-lg text-sm font-medium border transition ${formData.category === cat ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'}`}
+                                        className={`flex items-center gap-2 p-2 rounded-lg text-sm font-medium border transition ${formData.category === cat ? 'bg-accent-soft/40 border-accent text-amber-800' : 'bg-surface border-line text-ink-soft hover:bg-bg'}`}
                                     >
                                         {getIcon(cat)}
                                         {CATEGORY_NAMES[cat]}
@@ -319,36 +319,36 @@ const Expenses: React.FC<ExpensesProps> = ({ expenses, onAddExpense, onDeleteExp
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">金額</label>
+                            <label className="block text-sm font-bold text-ink mb-1">金額</label>
                             <input 
                                 type="number"
                                 required
                                 value={formData.amount}
                                 onChange={(e) => setFormData({...formData, amount: Number(e.target.value)})}
-                                className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">日期</label>
+                            <label className="block text-sm font-bold text-ink mb-1">日期</label>
                             <input 
                                 type="date"
                                 required
                                 value={formData.date}
                                 onChange={(e) => setFormData({...formData, date: e.target.value})}
-                                className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">備註說明</label>
+                            <label className="block text-sm font-bold text-ink mb-1">備註說明</label>
                             <input 
                                 type="text"
                                 value={formData.description}
                                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                                 placeholder="例如：9月份帳單"
-                                className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                             />
                         </div>
-                        <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2">
+                        <button type="submit" className="w-full bg-accent hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2">
                             <Save size={18} /> 儲存紀錄
                         </button>
                     </form>

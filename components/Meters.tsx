@@ -13,8 +13,8 @@ interface MetersProps {
 // 房間方塊定義（配色與「套房原狀」一致）
 const ROOMS: { id: RoomId; label: string; color: string; bg: string; ring: string }[] = [
   { id: '1', label: '第一間', color: 'text-sky-700',     bg: 'bg-sky-50',     ring: 'border-sky-300'     },
-  { id: '2', label: '第二間', color: 'text-emerald-700', bg: 'bg-emerald-50', ring: 'border-emerald-300' },
-  { id: '3', label: '第三間', color: 'text-amber-700',   bg: 'bg-amber-50',   ring: 'border-amber-300'   },
+  { id: '2', label: '第二間', color: 'text-leaf', bg: 'bg-leaf-soft/50', ring: 'border-emerald-300' },
+  { id: '3', label: '第三間', color: 'text-accent',   bg: 'bg-accent-soft/40',   ring: 'border-amber-300'   },
   { id: '4', label: '第四間', color: 'text-rose-700',    bg: 'bg-rose-50',    ring: 'border-rose-300'    },
 ];
 
@@ -176,23 +176,23 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-4 rounded-lg shadow-sm border-b-2 border-orange-100 gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-surface p-4 rounded-lg shadow-warm-sm border-b-2 border-line gap-4">
         <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 p-2 rounded-lg text-yellow-600">
+            <div className="bg-accent-soft p-2 rounded-lg text-accent">
                 <Zap size={24} />
             </div>
-            <h2 className="text-2xl font-bold text-stone-800">電表抄表管理</h2>
+            <h2 className="font-serif text-2xl font-bold text-ink">電表抄表管理</h2>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-mute" size={16} />
             <input 
               type="text" 
               placeholder="搜尋電表..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-stone-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-auto"
+              className="pl-9 pr-4 py-2 border border-line rounded-md text-sm outline-none focus:ring-2 focus:ring-accent w-full sm:w-auto"
             />
           </div>
           <button
@@ -202,40 +202,40 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                 setFormData(prev => ({ ...prev, roomId: presetRoom }));
                 setIsModalOpen(true);
               }}
-              className="flex-1 flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-md text-sm transition shadow-sm whitespace-nowrap"
+              className="flex-1 flex items-center justify-center gap-2 bg-stone-800 hover:bg-ink text-white px-4 py-2 rounded-md text-sm transition shadow-warm-sm whitespace-nowrap"
           >
               <Plus size={16} /> 新增抄表
           </button>
-          <button onClick={handleExport} className="flex-1 px-4 py-2 bg-white border border-stone-300 rounded-md text-sm font-bold text-stone-600 hover:bg-stone-50 whitespace-nowrap">
+          <button onClick={handleExport} className="flex-1 px-4 py-2 bg-surface border border-line rounded-md text-sm font-bold text-ink-soft hover:bg-bg whitespace-nowrap">
               匯出 Excel
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-stone-100 flex items-center justify-between">
+        <div className="bg-surface p-4 rounded-lg shadow-warm-sm border border-line flex items-center justify-between">
             <div>
-                <p className="text-xs text-stone-500 font-bold uppercase">本月總用電</p>
-                <p className="text-2xl font-black text-stone-800 mt-1">
-                    {readings.filter(r => r.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((acc, r) => acc + r.usage, 0).toLocaleString()} <span className="text-sm font-medium text-stone-400">度</span>
+                <p className="text-xs text-ink-soft font-bold uppercase">本月總用電</p>
+                <p className="text-2xl font-black text-ink mt-1">
+                    {readings.filter(r => r.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((acc, r) => acc + r.usage, 0).toLocaleString()} <span className="text-sm font-medium text-ink-mute">度</span>
                 </p>
             </div>
             <Zap size={32} className="text-yellow-400 opacity-50" />
         </div>
-         <div className="bg-white p-4 rounded-lg shadow-sm border border-stone-100 flex items-center justify-between">
+         <div className="bg-surface p-4 rounded-lg shadow-warm-sm border border-line flex items-center justify-between">
             <div>
-                <p className="text-xs text-stone-500 font-bold uppercase">平均計費單價</p>
-                <p className="text-2xl font-black text-stone-800 mt-1">
-                    ${filteredReadings.length > 0 ? dynamicAverageRate : '5.5'} <span className="text-sm font-medium text-stone-400">/度</span>
+                <p className="text-xs text-ink-soft font-bold uppercase">平均計費單價</p>
+                <p className="text-2xl font-black text-ink mt-1">
+                    ${filteredReadings.length > 0 ? dynamicAverageRate : '5.5'} <span className="text-sm font-medium text-ink-mute">/度</span>
                 </p>
             </div>
-             <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 font-bold">$</div>
+             <div className="w-8 h-8 rounded-full bg-surface-warm flex items-center justify-center text-ink-mute font-bold">$</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-stone-100 flex items-center justify-between">
+        <div className="bg-surface p-4 rounded-lg shadow-warm-sm border border-line flex items-center justify-between">
             <div>
-                <p className="text-xs text-stone-500 font-bold uppercase">已建檔電表</p>
-                <p className="text-2xl font-black text-stone-800 mt-1">
-                    {uniqueMeters.length} <span className="text-sm font-medium text-stone-400">支</span>
+                <p className="text-xs text-ink-soft font-bold uppercase">已建檔電表</p>
+                <p className="text-2xl font-black text-ink mt-1">
+                    {uniqueMeters.length} <span className="text-sm font-medium text-ink-mute">支</span>
                 </p>
             </div>
             <History size={32} className="text-blue-400 opacity-50" />
@@ -248,19 +248,19 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
           {/* 全部 */}
           <button
             onClick={() => setSelectedTab('all')}
-            className={`relative flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all font-bold shadow-sm
+            className={`relative flex flex-col items-center py-3 px-2 rounded-cozy border-2 transition-all font-bold shadow-warm-sm
               ${selectedTab === 'all'
-                ? 'bg-stone-800 text-white border-stone-800 shadow-md scale-[1.03]'
-                : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'}`}
+                ? 'bg-stone-800 text-white border-stone-800 shadow-warm scale-[1.03]'
+                : 'bg-surface border-line text-ink-soft hover:border-line hover:bg-bg'}`}
           >
             <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2
-              ${selectedTab === 'all' ? 'bg-white text-stone-800 border-white' : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+              ${selectedTab === 'all' ? 'bg-surface text-ink border-white' : 'bg-surface-warm text-ink-mute border-line'}`}>
               全
             </div>
             <span className="mt-1.5 text-xs font-bold">全部</span>
             {readings.length > 0 && (
-              <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
-                ${selectedTab === 'all' ? 'bg-amber-400 text-stone-900' : 'bg-stone-600 text-white'}`}>
+              <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow-warm gap-0.5
+                ${selectedTab === 'all' ? 'bg-accent/70 text-stone-900' : 'bg-stone-600 text-white'}`}>
                 {readings.length}<span className="text-[8px] opacity-80">筆</span>
               </span>
             )}
@@ -274,23 +274,23 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
               <button
                 key={room.id}
                 onClick={() => setSelectedTab(room.id)}
-                className={`relative flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all font-bold shadow-sm
+                className={`relative flex flex-col items-center py-3 px-2 rounded-cozy border-2 transition-all font-bold shadow-warm-sm
                   ${active
-                    ? `${room.bg} ${room.color} ${room.ring} shadow-md scale-[1.03]`
-                    : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'}`}
+                    ? `${room.bg} ${room.color} ${room.ring} shadow-warm scale-[1.03]`
+                    : 'bg-surface border-line text-ink-soft hover:border-line hover:bg-bg'}`}
               >
                 <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2 transition
                   ${active
-                    ? `bg-white ${room.color} ${room.ring} shadow`
-                    : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+                    ? `bg-surface ${room.color} ${room.ring} shadow-warm`
+                    : 'bg-surface-warm text-ink-mute border-line'}`}>
                   {room.id}
                 </div>
                 <span className="mt-1.5 text-xs font-bold flex items-center gap-1">
-                  <Home size={11} className={active ? room.color : 'text-stone-400'} />
+                  <Home size={11} className={active ? room.color : 'text-ink-mute'} />
                   {room.label}
                 </span>
                 {count > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow-warm gap-0.5
                     ${active ? 'bg-amber-500 text-white' : 'bg-stone-600 text-white'}`}>
                     {count}<span className="text-[8px] opacity-80">筆</span>
                   </span>
@@ -307,7 +307,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
             className={`mt-2 w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition
               ${selectedTab === 'unassigned'
                 ? 'bg-stone-800 text-white border-stone-800'
-                : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}`}
+                : 'bg-surface text-ink-soft border-line hover:bg-bg'}`}
           >
             <AlertTriangle size={12} /> 未分類 ({countsByRoom.unassigned})
           </button>
@@ -320,7 +320,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
           const rid = getRoomId(reading);
           const room = rid ? ROOMS.find(r => r.id === rid) : undefined;
           return (
-          <div key={reading.id} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+          <div key={reading.id} className="bg-surface rounded-lg shadow-warm-sm border border-line p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2.5">
                 {/* 房號圓徽 */}
@@ -329,71 +329,71 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                     {room.id}
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 bg-stone-100 text-stone-400 border-stone-200 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 bg-surface-warm text-ink-mute border-line flex-shrink-0">
                     ?
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-bold text-stone-800">{reading.meterName}</p>
-                  <p className="text-xs text-stone-400">{reading.date}</p>
+                  <p className="text-sm font-bold text-ink">{reading.meterName}</p>
+                  <p className="text-xs text-ink-mute">{reading.date}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-black text-stone-800">${reading.totalCost.toLocaleString()}</span>
+                <span className="text-base font-black text-ink">${reading.totalCost.toLocaleString()}</span>
                 <button
                   type="button"
                   onClick={() => setDeleteTargetId(reading.id)}
-                  className="text-stone-300 hover:text-rose-500 transition p-1 rounded-full hover:bg-rose-50"
+                  className="text-ink-mute hover:text-rose-500 transition p-1 rounded-full hover:bg-rose-50"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-stone-100">
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-line">
               <div className="text-center">
-                <p className="text-[10px] text-stone-400 font-bold uppercase">前次讀數</p>
-                <p className="text-sm font-bold text-stone-600 mt-0.5">{reading.previousReading}</p>
+                <p className="text-[10px] text-ink-mute font-bold uppercase">前次讀數</p>
+                <p className="text-sm font-bold text-ink-soft mt-0.5">{reading.previousReading}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-stone-400 font-bold uppercase">本次讀數</p>
-                <p className="text-sm font-bold text-stone-800 mt-0.5">{reading.currentReading}</p>
+                <p className="text-[10px] text-ink-mute font-bold uppercase">本次讀數</p>
+                <p className="text-sm font-bold text-ink mt-0.5">{reading.currentReading}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-stone-400 font-bold uppercase">使用度數</p>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 mt-0.5">
+                <p className="text-[10px] text-ink-mute font-bold uppercase">使用度數</p>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-accent-soft text-warm-600 mt-0.5">
                   {reading.usage} 度
                 </span>
               </div>
             </div>
-            {reading.note && <p className="text-xs text-stone-400 mt-2 italic">{reading.note}</p>}
+            {reading.note && <p className="text-xs text-ink-mute mt-2 italic">{reading.note}</p>}
           </div>
           );
         })}
         {filteredReadings.length === 0 && (
-          <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">尚無抄表紀錄</div>
+          <div className="bg-surface rounded-lg p-12 text-center text-ink-mute italic">尚無抄表紀錄</div>
         )}
       </div>
 
       {/* Desktop table view */}
-      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+      <div className="hidden sm:block bg-surface rounded-lg shadow-warm overflow-hidden">
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-orange-100">
-                <thead className="bg-stone-100">
+            <table className="min-w-full divide-y divide-line">
+                <thead className="bg-surface-warm">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">電表名稱</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">抄表日期</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">本次讀數</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">使用度數</th>
-                        <th className="px-6 py-3 text-right text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">小計金額</th>
-                        <th className="px-6 py-3 text-right text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">電表名稱</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">抄表日期</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">本次讀數</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">使用度數</th>
+                        <th className="px-6 py-3 text-right text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">小計金額</th>
+                        <th className="px-6 py-3 text-right text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-stone-100">
+                <tbody className="bg-surface divide-y divide-line">
                     {filteredReadings.map((reading) => {
                         const rid = getRoomId(reading);
                         const room = rid ? ROOMS.find(r => r.id === rid) : undefined;
                         return (
-                        <tr key={reading.id} className="hover:bg-amber-50/30 transition">
+                        <tr key={reading.id} className="hover:bg-accent-soft/40/30 transition">
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
                                     {/* 房號圓徽 */}
@@ -402,34 +402,34 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                             {room.id}
                                         </div>
                                     ) : (
-                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs border-2 bg-stone-100 text-stone-400 border-stone-200 flex-shrink-0" title="未分類">
+                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs border-2 bg-surface-warm text-ink-mute border-line flex-shrink-0" title="未分類">
                                             ?
                                         </div>
                                     )}
-                                    <span className="text-sm font-bold text-stone-700">{reading.meterName}</span>
+                                    <span className="text-sm font-bold text-ink">{reading.meterName}</span>
                                 </div>
-                                {reading.note && <p className="text-xs text-stone-400 pl-9 mt-1">{reading.note}</p>}
+                                {reading.note && <p className="text-xs text-ink-mute pl-9 mt-1">{reading.note}</p>}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600 font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-ink-soft font-medium">
                                 {reading.date}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-bold text-stone-800">{reading.currentReading}</div>
-                                <div className="text-xs text-stone-400">前次: {reading.previousReading}</div>
+                                <div className="text-sm font-bold text-ink">{reading.currentReading}</div>
+                                <div className="text-xs text-ink-mute">前次: {reading.previousReading}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent-soft text-warm-600">
                                     {reading.usage} 度
                                 </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-stone-800">
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-ink">
                                 ${reading.totalCost.toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                 <button
                                     type="button"
                                     onClick={() => setDeleteTargetId(reading.id)}
-                                    className="text-stone-400 hover:text-rose-500 transition p-2 rounded-full hover:bg-rose-50"
+                                    className="text-ink-mute hover:text-rose-500 transition p-2 rounded-full hover:bg-rose-50"
                                     title="刪除紀錄"
                                 >
                                     <Trash2 size={16} />
@@ -440,7 +440,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                     })}
                     {filteredReadings.length === 0 && (
                         <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center text-stone-400 italic">尚無抄表紀錄</td>
+                            <td colSpan={6} className="px-6 py-12 text-center text-ink-mute italic">尚無抄表紀錄</td>
                         </tr>
                     )}
                 </tbody>
@@ -450,17 +450,17 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
 
       {/* 新增視窗 */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-orange-50 shrink-0">
-                    <h3 className="text-lg font-bold text-stone-800">新增電表紀錄</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+            <div className="bg-surface rounded-cozy shadow-warm-xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="px-6 py-4 border-b border-line flex justify-between items-center bg-bg shrink-0">
+                    <h3 className="font-serif text-lg font-bold text-ink">新增電表紀錄</h3>
+                    <button onClick={() => setIsModalOpen(false)} className="text-ink-mute hover:text-ink-soft"><X size={20} /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* 套房選擇器 */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-2">所屬套房</label>
+                            <label className="block text-sm font-bold text-ink mb-2">所屬套房</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {ROOMS.map(room => {
                                     const active = formData.roomId === room.id;
@@ -471,11 +471,11 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                             onClick={() => setFormData({ ...formData, roomId: room.id })}
                                             className={`relative flex flex-col items-center py-2.5 rounded-lg border-2 transition font-bold text-xs
                                                 ${active
-                                                    ? `${room.bg} ${room.color} ${room.ring} shadow`
-                                                    : 'bg-white border-stone-200 text-stone-400 hover:border-stone-300'}`}
+                                                    ? `${room.bg} ${room.color} ${room.ring} shadow-warm`
+                                                    : 'bg-surface border-line text-ink-mute hover:border-line'}`}
                                         >
                                             <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-sm
-                                                ${active ? `bg-white ${room.color} border-2 ${room.ring}` : 'bg-stone-100 text-stone-400'}`}>
+                                                ${active ? `bg-surface ${room.color} border-2 ${room.ring}` : 'bg-surface-warm text-ink-mute'}`}>
                                                 {room.id}
                                             </div>
                                             <span className="mt-1">{room.label}</span>
@@ -484,14 +484,14 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 })}
                             </div>
                             {!formData.roomId && (
-                                <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1">
+                                <p className="text-[11px] text-accent mt-1.5 flex items-center gap-1">
                                     <AlertTriangle size={11} /> 請選擇所屬套房
                                 </p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">電表名稱/房號</label>
+                            <label className="block text-sm font-bold text-ink mb-1">電表名稱/房號</label>
                             <div className="relative">
                                 <input 
                                     list="meter-suggestions"
@@ -500,7 +500,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                     value={formData.meterName}
                                     onChange={(e) => handleMeterNameChange(e.target.value)}
                                     placeholder="例如：3F A室 電表"
-                                    className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                                 />
                                 <datalist id="meter-suggestions">
                                     {uniqueMeters.map(m => <option key={m} value={m} />)}
@@ -510,43 +510,43 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                         
                         <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label className="block text-sm font-bold text-stone-700 mb-1">抄表日期</label>
+                                <label className="block text-sm font-bold text-ink mb-1">抄表日期</label>
                                 <input 
                                     type="date"
                                     required
                                     value={formData.date}
                                     onChange={(e) => setFormData({...formData, date: e.target.value})}
-                                    className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                                 />
                             </div>
                              <div>
-                                <label className="block text-sm font-bold text-stone-700 mb-1">每度費率</label>
+                                <label className="block text-sm font-bold text-ink mb-1">每度費率</label>
                                 <input 
                                     type="number"
                                     step="0.1"
                                     required
                                     value={formData.ratePerKwh}
                                     onChange={(e) => setFormData({...formData, ratePerKwh: parseFloat(e.target.value)})}
-                                    className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                                 />
                             </div>
                         </div>
 
-                        <div className="p-4 bg-stone-50 rounded-lg border border-stone-200 space-y-4">
+                        <div className="p-4 bg-bg rounded-lg border border-line space-y-4">
                             <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                    <label className="block text-xs font-bold text-stone-500 mb-1">上次讀數</label>
+                                    <label className="block text-xs font-bold text-ink-soft mb-1">上次讀數</label>
                                     <input 
                                         type="number"
                                         step="0.1"
                                         value={formData.previousReading}
                                         onChange={(e) => setFormData({...formData, previousReading: parseFloat(e.target.value)})}
-                                        className="w-full border border-stone-300 rounded p-2 text-sm bg-stone-100"
+                                        className="w-full border border-line rounded p-2 text-sm bg-surface-warm"
                                     />
                                 </div>
-                                <div className="pb-3 text-stone-400"><ArrowRight size={16} /></div>
+                                <div className="pb-3 text-ink-mute"><ArrowRight size={16} /></div>
                                 <div className="flex-1">
-                                    <label className="block text-xs font-bold text-amber-600 mb-1">本次讀數</label>
+                                    <label className="block text-xs font-bold text-accent mb-1">本次讀數</label>
                                     <input 
                                         type="number"
                                         step="0.1"
@@ -554,34 +554,34 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                         autoFocus
                                         value={formData.currentReading}
                                         onChange={(e) => setFormData({...formData, currentReading: parseFloat(e.target.value)})}
-                                        className="w-full border-2 border-amber-500 rounded p-2 text-sm font-bold text-stone-800 focus:outline-none"
+                                        className="w-full border-2 border-accent rounded p-2 text-sm font-bold text-ink focus:outline-none"
                                     />
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center border-t border-stone-200 pt-3">
-                                <span className="text-sm font-bold text-stone-600">本期用電：</span>
-                                <span className="text-lg font-black text-amber-600">{calculateUsage()} 度</span>
+                            <div className="flex justify-between items-center border-t border-line pt-3">
+                                <span className="text-sm font-bold text-ink-soft">本期用電：</span>
+                                <span className="text-lg font-black text-accent">{calculateUsage()} 度</span>
                             </div>
                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-bold text-stone-600">預估電費：</span>
-                                <span className="text-lg font-black text-stone-800">${calculateCost()}</span>
+                                <span className="text-sm font-bold text-ink-soft">預估電費：</span>
+                                <span className="text-lg font-black text-ink">${calculateCost()}</span>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">備註</label>
+                            <label className="block text-sm font-bold text-ink mb-1">備註</label>
                             <input 
                                 type="text"
                                 value={formData.note}
                                 onChange={(e) => setFormData({...formData, note: e.target.value})}
                                 placeholder="異常狀況紀錄..."
-                                className="w-full border border-stone-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full border border-line rounded-lg p-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={!formData.roomId}
-                            className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2"
+                            className="w-full bg-accent hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg mt-2 flex items-center justify-center gap-2"
                         >
                             <Save size={18} /> 儲存紀錄
                         </button>
@@ -593,19 +593,19 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
 
       {/* 刪除確認視窗 */}
       {deleteTargetId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-sm w-full overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+          <div className="bg-surface rounded-cozy shadow-warm-xl max-sm w-full overflow-hidden">
             <div className="p-6 text-center">
               <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mb-4 mx-auto text-rose-600">
                 <AlertTriangle size={24} />
               </div>
-              <h3 className="text-xl font-bold text-stone-800 mb-2">確定刪除此紀錄?</h3>
-              <p className="text-stone-500 text-sm">此操作將永久移除此筆抄表數據。</p>
+              <h3 className="font-serif text-xl font-bold text-ink mb-2">確定刪除此紀錄?</h3>
+              <p className="text-ink-soft text-sm">此操作將永久移除此筆抄表數據。</p>
             </div>
-            <div className="flex border-t border-stone-100">
+            <div className="flex border-t border-line">
               <button 
                 onClick={() => setDeleteTargetId(null)} 
-                className="flex-1 px-6 py-4 text-stone-600 font-medium hover:bg-stone-50 border-r border-stone-100"
+                className="flex-1 px-6 py-4 text-ink-soft font-medium hover:bg-bg border-r border-line"
               >
                 取消
               </button>

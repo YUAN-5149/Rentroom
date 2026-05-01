@@ -15,8 +15,8 @@ interface RoomConditionProps {
 
 const ROOMS: { id: RoomId; label: string; color: string; bg: string }[] = [
   { id: '1', label: '第一間', color: 'text-sky-700',    bg: 'bg-sky-50 border-sky-300'    },
-  { id: '2', label: '第二間', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-300' },
-  { id: '3', label: '第三間', color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-300'  },
+  { id: '2', label: '第二間', color: 'text-leaf', bg: 'bg-leaf-soft/50 border-emerald-300' },
+  { id: '3', label: '第三間', color: 'text-accent',  bg: 'bg-accent-soft/40 border-amber-300'  },
   { id: '4', label: '第四間', color: 'text-rose-700',   bg: 'bg-rose-50 border-rose-300'   },
 ];
 
@@ -133,14 +133,14 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
       />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-stone-200 gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-surface p-4 rounded-cozy shadow-warm-sm border border-line gap-3">
         <div className="flex items-center gap-3">
           <div className="bg-indigo-100 p-2.5 rounded-lg text-indigo-600">
             <Camera size={22} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-stone-800 tracking-tight">套房原狀紀錄</h2>
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Room Condition Photos</p>
+            <h2 className="font-serif text-lg font-bold text-ink tracking-tight">套房原狀紀錄</h2>
+            <p className="text-[10px] text-ink-mute font-bold uppercase tracking-widest">Room Condition Photos</p>
           </div>
         </div>
 
@@ -162,26 +162,26 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
             <button
               key={room.id}
               onClick={() => setSelectedRoom(room.id)}
-              className={`relative flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all font-bold text-sm shadow-sm
+              className={`relative flex flex-col items-center py-3 px-2 rounded-cozy border-2 transition-all font-bold text-sm shadow-warm-sm
                 ${active
-                  ? `${room.bg} ${room.color} shadow-md scale-[1.03]`
-                  : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'
+                  ? `${room.bg} ${room.color} shadow-warm scale-[1.03]`
+                  : 'bg-surface border-line text-ink-soft hover:border-line hover:bg-bg'
                 }`}
             >
               {/* 房號圓徽 — 直接顯示 1/2/3/4，視覺上一眼對應「第N間」 */}
               <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-black text-base border-2 transition
                 ${active
-                  ? `bg-white ${room.color} ${room.bg.split(' ')[1]} shadow`
-                  : 'bg-stone-100 text-stone-400 border-stone-200'}`}>
+                  ? `bg-surface ${room.color} ${room.bg.split(' ')[1]} shadow-warm`
+                  : 'bg-surface-warm text-ink-mute border-line'}`}>
                 {room.id}
               </div>
               <span className="mt-1.5 text-xs font-bold flex items-center gap-1">
-                <Home size={11} className={active ? room.color : 'text-stone-400'} />
+                <Home size={11} className={active ? room.color : 'text-ink-mute'} />
                 {room.label}
               </span>
               {/* 照片張數徽章 — 加「張」字明確表示是計數，不是房號 */}
               {count > 0 && (
-                <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow gap-0.5
+                <span className={`absolute -top-1.5 -right-1.5 min-w-[24px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow-warm gap-0.5
                   ${active ? 'bg-indigo-600 text-white' : 'bg-stone-600 text-white'}`}>
                   {count}<span className="text-[8px] opacity-80">張</span>
                 </span>
@@ -196,21 +196,21 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
-        className={`rounded-xl transition-all ${dragging ? 'ring-4 ring-indigo-400 ring-offset-2 bg-indigo-50/40' : ''}`}
+        className={`rounded-cozy transition-all ${dragging ? 'ring-4 ring-indigo-400 ring-offset-2 bg-indigo-50/40' : ''}`}
       >
         {roomPhotos.length === 0 ? (
           /* Empty State — entire area is a label for reliable tap-to-open on mobile */
           <label
             htmlFor={photoInputId(selectedRoom)}
-            className="flex flex-col items-center justify-center gap-4 p-12 rounded-xl border-2 border-dashed border-stone-300 bg-white cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group"
+            className="flex flex-col items-center justify-center gap-4 p-12 rounded-cozy border-2 border-dashed border-line bg-surface cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group"
           >
             <div className={`p-5 rounded-full ${currentRoom.bg} transition-transform group-hover:scale-110`}>
               <ImageOff size={36} className={currentRoom.color} />
             </div>
             <div className="text-center">
-              <p className="font-bold text-stone-600">{currentRoom.label}尚無照片紀錄</p>
-              <p className="text-sm text-stone-400 mt-1">點擊或拖曳照片至此上傳</p>
-              <p className="text-xs text-stone-300 mt-1">支援 JPG、PNG、HEIC · 每張最大 {MAX_FILE_MB}MB</p>
+              <p className="font-bold text-ink-soft">{currentRoom.label}尚無照片紀錄</p>
+              <p className="text-sm text-ink-mute mt-1">點擊或拖曳照片至此上傳</p>
+              <p className="text-xs text-ink-mute mt-1">支援 JPG、PNG、HEIC · 每張最大 {MAX_FILE_MB}MB</p>
             </div>
             <span className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold ${currentRoom.bg} ${currentRoom.color} border ${currentRoom.bg.replace('bg-','border-').replace('-50','-300')}`}>
               <Plus size={16} /> 新增照片
@@ -225,7 +225,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
               </span>
               <label
                 htmlFor={photoInputId(selectedRoom)}
-                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-white/80 hover:bg-white transition cursor-pointer select-none ${currentRoom.color}`}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-surface/80 hover:bg-surface transition cursor-pointer select-none ${currentRoom.color}`}
               >
                 <Plus size={13} /> 繼續新增
               </label>
@@ -236,10 +236,10 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
               {roomPhotos.map((photo, index) => (
                 <div
                   key={photo.id}
-                  className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow"
+                  className="bg-surface rounded-cozy border border-line shadow-warm-sm overflow-hidden flex flex-col group hover:shadow-warm transition-shadow-warm"
                 >
                   {/* Image */}
-                  <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
+                  <div className="relative aspect-[4/3] bg-surface-warm overflow-hidden">
                     <img
                       src={photo.imageData}
                       alt={photo.caption || photo.fileName}
@@ -250,7 +250,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-start justify-between p-2 opacity-0 group-hover:opacity-100">
                       <button
                         onClick={() => setLightbox(photo)}
-                        className="p-1.5 bg-white/90 rounded-full shadow text-stone-700 hover:text-indigo-600 transition"
+                        className="p-1.5 bg-surface/90 rounded-full shadow-warm text-ink hover:text-indigo-600 transition"
                         title="放大檢視"
                       >
                         <ZoomIn size={15} />
@@ -262,14 +262,14 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                             setCaptions(prev => { const c = {...prev}; delete c[photo.id]; return c; });
                           }
                         }}
-                        className="p-1.5 bg-white/90 rounded-full shadow text-stone-400 hover:text-rose-600 transition"
+                        className="p-1.5 bg-surface/90 rounded-full shadow-warm text-ink-mute hover:text-rose-600 transition"
                         title="刪除照片"
                       >
                         <Trash2 size={15} />
                       </button>
                     </div>
                     {/* Index badge */}
-                    <div className={`absolute bottom-2 left-2 text-[10px] font-black px-1.5 py-0.5 rounded-full ${currentRoom.bg} ${currentRoom.color} shadow-sm border`}>
+                    <div className={`absolute bottom-2 left-2 text-[10px] font-black px-1.5 py-0.5 rounded-full ${currentRoom.bg} ${currentRoom.color} shadow-warm-sm border`}>
                       #{index + 1}
                     </div>
                   </div>
@@ -277,10 +277,10 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                   {/* Info + Caption */}
                   <div className="p-3 flex flex-col gap-2 flex-1">
                     {/* Timestamp & filename */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-stone-400 font-medium">
+                    <div className="flex items-center gap-1.5 text-[10px] text-ink-mute font-medium">
                       <Clock size={10} />
                       <span>{formatDate(photo.uploadedAt)}</span>
-                      <span className="text-stone-200">·</span>
+                      <span className="text-ink-mute">·</span>
                       <span className="truncate max-w-[120px]" title={photo.fileName}>{photo.fileName}</span>
                     </div>
 
@@ -291,9 +291,9 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
                       onBlur={() => handleCaptionBlur(photo.id)}
                       placeholder="點擊輸入照片說明..."
                       rows={3}
-                      className={`w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2.5 resize-none
+                      className={`w-full text-xs text-ink border border-line rounded-lg p-2.5 resize-none
                         focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-400
-                        placeholder:text-stone-300 transition-all bg-stone-50 hover:bg-white leading-relaxed`}
+                        placeholder:text-ink-mute transition-all bg-bg hover:bg-surface leading-relaxed`}
                     />
 
                     {/* Save indicator */}
@@ -314,12 +314,12 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
               {/* Add more card — label for reliable tap-to-open */}
               <label
                 htmlFor={photoInputId(selectedRoom)}
-                className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-stone-200 bg-stone-50 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all min-h-[200px] group"
+                className="flex flex-col items-center justify-center gap-3 rounded-cozy border-2 border-dashed border-line bg-bg cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all min-h-[200px] group"
               >
                 <div className={`p-3 rounded-full ${currentRoom.bg} group-hover:scale-110 transition-transform`}>
                   <Plus size={22} className={currentRoom.color} />
                 </div>
-                <p className="text-xs font-bold text-stone-400 group-hover:text-indigo-600 transition">新增更多照片</p>
+                <p className="text-xs font-bold text-ink-mute group-hover:text-indigo-600 transition">新增更多照片</p>
               </label>
             </div>
           </div>
@@ -334,12 +334,12 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
         >
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-3 text-white" onClick={e => e.stopPropagation()}>
-            <div className="text-sm font-bold text-stone-300 truncate max-w-[60%]">{lightbox.fileName}</div>
+            <div className="text-sm font-bold text-ink-mute truncate max-w-[60%]">{lightbox.fileName}</div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-stone-400">
+              <span className="text-xs text-ink-mute">
                 {roomPhotos.findIndex(p => p.id === lightbox.id) + 1} / {roomPhotos.length}
               </span>
-              <button onClick={() => setLightbox(null)} className="p-1.5 text-stone-400 hover:text-white transition">
+              <button onClick={() => setLightbox(null)} className="p-1.5 text-ink-mute hover:text-white transition">
                 <X size={22} />
               </button>
             </div>
@@ -350,7 +350,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
             <button
               onClick={() => goLightbox('prev')}
               disabled={roomPhotos.findIndex(p => p.id === lightbox.id) === 0}
-              className="absolute left-2 sm:left-4 p-2 bg-white/10 hover:bg-white/25 disabled:opacity-20 rounded-full text-white transition"
+              className="absolute left-2 sm:left-4 p-2 bg-surface/10 hover:bg-surface/25 disabled:opacity-20 rounded-full text-white transition"
             >
               <ChevronLeft size={28} />
             </button>
@@ -364,7 +364,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
             <button
               onClick={() => goLightbox('next')}
               disabled={roomPhotos.findIndex(p => p.id === lightbox.id) === roomPhotos.length - 1}
-              className="absolute right-2 sm:right-4 p-2 bg-white/10 hover:bg-white/25 disabled:opacity-20 rounded-full text-white transition"
+              className="absolute right-2 sm:right-4 p-2 bg-surface/10 hover:bg-surface/25 disabled:opacity-20 rounded-full text-white transition"
             >
               <ChevronRight size={28} />
             </button>
@@ -373,11 +373,11 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
           {/* Caption */}
           <div className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
             {lightbox.caption ? (
-              <p className="text-stone-300 text-sm">{lightbox.caption}</p>
+              <p className="text-ink-mute text-sm">{lightbox.caption}</p>
             ) : (
-              <p className="text-stone-600 text-xs italic">（無照片說明）</p>
+              <p className="text-ink-soft text-xs italic">（無照片說明）</p>
             )}
-            <p className="text-stone-600 text-[10px] mt-1 flex items-center justify-center gap-1">
+            <p className="text-ink-soft text-[10px] mt-1 flex items-center justify-center gap-1">
               <Clock size={10} /> {formatDate(lightbox.uploadedAt)}
             </p>
           </div>

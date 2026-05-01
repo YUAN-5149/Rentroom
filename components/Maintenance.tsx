@@ -104,9 +104,9 @@ const Maintenance: React.FC<MaintenanceProps> = ({
       case 'UF-591': return 'bg-blue-100';    // 藍底色
       case 'UF-592': return 'bg-green-100';   // 綠底色
       case 'UF-504': return 'bg-sky-100';     // 水藍底色
-      case 'UF-28':  return 'bg-yellow-100';  // 黃底色
+      case 'UF-28':  return 'bg-accent-soft';  // 黃底色
       case 'UF-515': return 'bg-orange-100';  // 橘底色
-      default: return 'bg-white';
+      default: return 'bg-surface';
     }
   };
 
@@ -170,14 +170,14 @@ const Maintenance: React.FC<MaintenanceProps> = ({
     switch (status) {
         case MaintenanceStatus.COMPLETED: return 'bg-emerald-100 text-emerald-800 border-emerald-200';
         case MaintenanceStatus.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
-        default: return 'bg-amber-100 text-amber-800 border-amber-200';
+        default: return 'bg-accent-soft text-amber-800 border-accent-soft';
     }
   };
 
   const getPriorityStyle = (priority: Priority) => {
     switch (priority) {
         case Priority.HIGH: return 'text-rose-600 font-bold';
-        case Priority.MEDIUM: return 'text-amber-600 font-bold';
+        case Priority.MEDIUM: return 'text-accent font-bold';
         default: return 'text-emerald-600 font-bold';
     }
   };
@@ -263,27 +263,27 @@ const Maintenance: React.FC<MaintenanceProps> = ({
 
 
   const SortIcon = ({ colKey }: { colKey: string }) => {
-    if (sortConfig.key !== colKey) return <ArrowUpDown size={14} className="text-stone-300 ml-1 inline" />;
+    if (sortConfig.key !== colKey) return <ArrowUpDown size={14} className="text-ink-mute ml-1 inline" />;
     return sortConfig.direction === 'asc' ? 
-      <ArrowUp size={14} className="text-amber-600 ml-1 inline" /> : 
-      <ArrowDown size={14} className="text-amber-600 ml-1 inline" />;
+      <ArrowUp size={14} className="text-accent ml-1 inline" /> : 
+      <ArrowDown size={14} className="text-accent ml-1 inline" />;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-4 rounded-lg shadow-sm border-b-2 border-orange-100 gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-surface p-4 rounded-lg shadow-warm-sm border-b-2 border-line gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
-          <h2 className="text-2xl font-bold text-stone-800 whitespace-nowrap">維修管理</h2>
-          <div className="flex bg-orange-50 rounded-lg p-1 w-full sm:w-auto">
+          <h2 className="font-serif text-2xl font-bold text-ink whitespace-nowrap">維修管理</h2>
+          <div className="flex bg-bg rounded-lg p-1 w-full sm:w-auto">
              <button 
                 onClick={() => setActiveTab('REPAIR')}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'REPAIR' ? 'bg-white shadow text-amber-700' : 'text-stone-500 hover:text-stone-700'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'REPAIR' ? 'bg-surface shadow-warm text-accent' : 'text-ink-soft hover:text-ink'}`}
              >
                 租客報修
              </button>
              <button 
                 onClick={() => setActiveTab('FILTER')}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'FILTER' ? 'bg-white shadow text-amber-700' : 'text-stone-500 hover:text-stone-700'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'FILTER' ? 'bg-surface shadow-warm text-accent' : 'text-ink-soft hover:text-ink'}`}
              >
                 飲水機濾心
              </button>
@@ -293,7 +293,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
             {activeTab === 'REPAIR' && (
                 <button 
                     onClick={handleOpenAddModal}
-                    className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm transition shadow-sm whitespace-nowrap"
+                    className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-accent hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm transition shadow-warm-sm whitespace-nowrap"
                 >
                     <Plus size={16} /> 新增報修
                 </button>
@@ -311,15 +311,15 @@ const Maintenance: React.FC<MaintenanceProps> = ({
         <div className="space-y-4">
 
           {/* Filter Bar */}
-          <div className="bg-white p-3 rounded-lg border border-stone-200 flex flex-wrap gap-2 items-center shadow-sm overflow-x-auto">
-             <div className="flex items-center gap-2 text-stone-500 text-sm font-bold mr-2">
+          <div className="bg-surface p-3 rounded-lg border border-line flex flex-wrap gap-2 items-center shadow-warm-sm overflow-x-auto">
+             <div className="flex items-center gap-2 text-ink-soft text-sm font-bold mr-2">
                 <Filter size={16} /> 篩選:
              </div>
              
              <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="bg-stone-50 border border-stone-200 text-stone-700 text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-amber-500 flex-grow sm:flex-grow-0"
+                className="bg-bg border border-line text-ink text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-accent flex-grow sm:flex-grow-0"
              >
                 <option value="ALL">全部狀態</option>
                 <option value={MaintenanceStatus.OPEN}>待處理</option>
@@ -330,7 +330,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
              <select 
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value as any)}
-                className="bg-stone-50 border border-stone-200 text-stone-700 text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-amber-500 flex-grow sm:flex-grow-0"
+                className="bg-bg border border-line text-ink text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-accent flex-grow sm:flex-grow-0"
              >
                 <option value="ALL">全部優先級</option>
                 <option value={Priority.HIGH}>緊急 (High)</option>
@@ -341,7 +341,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
              <select 
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-stone-50 border border-stone-200 text-stone-700 text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-amber-500 flex-grow sm:flex-grow-0"
+                className="bg-bg border border-line text-ink text-xs rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-accent flex-grow sm:flex-grow-0"
              >
                 <option value="ALL">全部類別</option>
                 <option value="Appliance">家電</option>
@@ -362,7 +362,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
           </div>
 
           {selectedTicketIds.length > 0 && (
-            <div className="bg-stone-800 text-white p-3 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between animate-in slide-in-from-top-2 duration-300 shadow-lg gap-2">
+            <div className="bg-stone-800 text-white p-3 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between animate-in slide-in-from-top-2 duration-300 shadow-warm-lg gap-2">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <div className="text-sm font-bold flex items-center gap-2">
                   <CheckSquare size={16} className="text-amber-500" />
@@ -370,7 +370,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                 </div>
                 <div className="h-4 w-px bg-stone-600 hidden sm:block"></div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="text-xs font-medium text-stone-400 whitespace-nowrap">批次標記：</div>
+                    <div className="text-xs font-medium text-ink-mute whitespace-nowrap">批次標記：</div>
                     <div className="flex gap-2 w-full sm:w-auto">
                         <button 
                             onClick={() => handleBatchStatusUpdate(MaintenanceStatus.COMPLETED)}
@@ -389,7 +389,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
               </div>
               <button 
                 onClick={() => setSelectedTicketIds([])}
-                className="absolute top-2 right-2 sm:static text-stone-400 hover:text-white transition"
+                className="absolute top-2 right-2 sm:static text-ink-mute hover:text-white transition"
               >
                 <X size={18} />
               </button>
@@ -399,36 +399,36 @@ const Maintenance: React.FC<MaintenanceProps> = ({
           {/* Mobile card view */}
           <div className="sm:hidden space-y-3">
             {filteredAndSortedTickets.map(ticket => (
-              <div key={ticket.id} className={`bg-white rounded-lg shadow-sm border border-stone-200 p-4 ${selectedTicketIds.includes(ticket.id) ? 'ring-2 ring-amber-400' : ''}`}>
+              <div key={ticket.id} className={`bg-surface rounded-lg shadow-warm-sm border border-line p-4 ${selectedTicketIds.includes(ticket.id) ? 'ring-2 ring-amber-400' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <button onClick={() => toggleSelectOne(ticket.id)} className="text-stone-400 hover:text-amber-600 transition flex-shrink-0">
-                      {selectedTicketIds.includes(ticket.id) ? <CheckSquare size={18} className="text-amber-600" /> : <Square size={18} />}
+                    <button onClick={() => toggleSelectOne(ticket.id)} className="text-ink-mute hover:text-accent transition flex-shrink-0">
+                      {selectedTicketIds.includes(ticket.id) ? <CheckSquare size={18} className="text-accent" /> : <Square size={18} />}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-stone-800 line-clamp-2">{ticket.description}</p>
-                      {ticket.notes && <p className="text-xs text-stone-400 italic mt-0.5">附註: {ticket.notes}</p>}
+                      <p className="text-sm font-bold text-ink line-clamp-2">{ticket.description}</p>
+                      {ticket.notes && <p className="text-xs text-ink-mute italic mt-0.5">附註: {ticket.notes}</p>}
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0 ml-2">
-                    <button onClick={() => handleOpenEditModal(ticket)} className="text-stone-400 hover:text-amber-600 transition p-1.5 rounded-full hover:bg-amber-50">
+                    <button onClick={() => handleOpenEditModal(ticket)} className="text-ink-mute hover:text-accent transition p-1.5 rounded-full hover:bg-accent-soft/40">
                       <Edit size={15} />
                     </button>
-                    <button onClick={() => handleDelete(ticket.id)} className="text-stone-400 hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50">
+                    <button onClick={() => handleDelete(ticket.id)} className="text-ink-mute hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50">
                       <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-stone-100">
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-line">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 text-[10px] font-bold">
+                    <div className="w-6 h-6 bg-accent-soft rounded-full flex items-center justify-center text-accent text-[10px] font-bold">
                       {ticket.tenantName.charAt(0)}
                     </div>
-                    <span className="text-xs text-stone-600 font-medium">{ticket.tenantName}</span>
+                    <span className="text-xs text-ink-soft font-medium">{ticket.tenantName}</span>
                   </div>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded font-bold">{translateCategory(ticket.category)}</span>
-                  <span className="text-xs text-stone-500">{ticket.reportDate}</span>
-                  <span className="text-xs font-bold text-stone-700">${(ticket.cost || 0).toLocaleString()}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-surface-warm text-ink-soft rounded font-bold">{translateCategory(ticket.category)}</span>
+                  <span className="text-xs text-ink-soft">{ticket.reportDate}</span>
+                  <span className="text-xs font-bold text-ink">${(ticket.cost || 0).toLocaleString()}</span>
                   <div className="ml-auto flex items-center gap-2">
                     <select
                       value={ticket.priority}
@@ -442,7 +442,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                     <select
                       value={ticket.status}
                       onChange={(e) => onUpdateTicketStatus(ticket.id, e.target.value as MaintenanceStatus)}
-                      className={`text-[11px] font-bold py-1 px-2 rounded-full border cursor-pointer outline-none transition appearance-none shadow-sm ${getStatusStyle(ticket.status)}`}
+                      className={`text-[11px] font-bold py-1 px-2 rounded-full border cursor-pointer outline-none transition appearance-none shadow-warm-sm ${getStatusStyle(ticket.status)}`}
                     >
                       <option value={MaintenanceStatus.OPEN}>待處理</option>
                       <option value={MaintenanceStatus.IN_PROGRESS}>維修中</option>
@@ -453,56 +453,56 @@ const Maintenance: React.FC<MaintenanceProps> = ({
               </div>
             ))}
             {filteredAndSortedTickets.length === 0 && (
-              <div className="bg-white rounded-lg p-12 text-center text-stone-400 italic">目前沒有符合條件的報修紀錄。</div>
+              <div className="bg-surface rounded-lg p-12 text-center text-ink-mute italic">目前沒有符合條件的報修紀錄。</div>
             )}
           </div>
 
           {/* Desktop table view */}
-          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <div className="hidden sm:block bg-surface rounded-lg shadow-warm overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-orange-100">
-                <thead className="bg-stone-100">
+                <table className="min-w-full divide-y divide-line">
+                <thead className="bg-surface-warm">
                     <tr>
                     <th className="px-6 py-3 text-left w-10">
-                        <button onClick={toggleSelectAll} className="text-stone-400 hover:text-amber-600 transition">
+                        <button onClick={toggleSelectAll} className="text-ink-mute hover:text-accent transition">
                         {selectedTicketIds.length === filteredAndSortedTickets.length && filteredAndSortedTickets.length > 0 ? (
-                            <CheckSquare size={18} className="text-amber-600" />
+                            <CheckSquare size={18} className="text-accent" />
                         ) : (
                             <Square size={18} />
                         )}
                         </button>
                     </th>
                     <th
-                        className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
+                        className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider cursor-pointer hover:bg-surface-warm transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('date')}
                     >
                         日期 / 類別 <SortIcon colKey="date" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">租客</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider min-w-[200px]">問題描述</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">租客</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider min-w-[200px]">問題描述</th>
                     <th
-                        className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
+                        className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider cursor-pointer hover:bg-surface-warm transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('priority')}
                     >
                         優先級 (可改) <SortIcon colKey="priority" />
                     </th>
                     <th
-                        className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider cursor-pointer hover:bg-stone-200 transition select-none group whitespace-nowrap"
+                        className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider cursor-pointer hover:bg-surface-warm transition select-none group whitespace-nowrap"
                         onClick={() => handleSort('cost')}
                     >
                         費用 <SortIcon colKey="cost" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">處理狀態 (可改)</th>
-                    <th className="px-6 py-3 text-right text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">處理狀態 (可改)</th>
+                    <th className="px-6 py-3 text-right text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">操作</th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-stone-100">
+                <tbody className="bg-surface divide-y divide-line">
                     {filteredAndSortedTickets.map(ticket => (
-                    <tr key={ticket.id} className={`${selectedTicketIds.includes(ticket.id) ? 'bg-amber-50/50' : 'hover:bg-orange-50/30'} transition duration-150`}>
+                    <tr key={ticket.id} className={`${selectedTicketIds.includes(ticket.id) ? 'bg-accent-soft/40/50' : 'hover:bg-bg/30'} transition duration-150`}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                        <button onClick={() => toggleSelectOne(ticket.id)} className="text-stone-400 hover:text-amber-600 transition">
+                        <button onClick={() => toggleSelectOne(ticket.id)} className="text-ink-mute hover:text-accent transition">
                             {selectedTicketIds.includes(ticket.id) ? (
-                            <CheckSquare size={18} className="text-amber-600" />
+                            <CheckSquare size={18} className="text-accent" />
                             ) : (
                             <Square size={18} />
                             )}
@@ -510,23 +510,23 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-stone-900">{ticket.reportDate}</div>
-                        <div className="text-[10px] px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded inline-block mt-1 font-bold">
+                        <div className="text-[10px] px-1.5 py-0.5 bg-surface-warm text-ink-soft rounded inline-block mt-1 font-bold">
                             {translateCategory(ticket.category)}
                         </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 text-xs font-bold">
+                            <div className="w-7 h-7 bg-accent-soft rounded-full flex items-center justify-center text-accent text-xs font-bold">
                                 {ticket.tenantName.charAt(0)}
                             </div>
-                            <span className="text-sm text-stone-700 font-medium">{ticket.tenantName}</span>
+                            <span className="text-sm text-ink font-medium">{ticket.tenantName}</span>
                         </div>
                         </td>
                         <td className="px-6 py-4">
-                        <p className="text-sm text-stone-800 line-clamp-1 max-w-xs" title={ticket.description}>
+                        <p className="text-sm text-ink line-clamp-1 max-w-xs" title={ticket.description}>
                             {ticket.description}
                         </p>
-                        {ticket.notes && <p className="text-[10px] text-stone-400 mt-0.5 italic">附註: {ticket.notes}</p>}
+                        {ticket.notes && <p className="text-[10px] text-ink-mute mt-0.5 italic">附註: {ticket.notes}</p>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                             <select
@@ -539,14 +539,14 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                             <option value={Priority.HIGH}>緊急</option>
                             </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700 font-semibold">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-ink font-semibold">
                             ${(ticket.cost || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                             <select
                             value={ticket.status}
                             onChange={(e) => onUpdateTicketStatus(ticket.id, e.target.value as MaintenanceStatus)}
-                            className={`text-xs font-bold py-1 px-3 rounded-full border cursor-pointer outline-none transition appearance-none shadow-sm ${getStatusStyle(ticket.status)}`}
+                            className={`text-xs font-bold py-1 px-3 rounded-full border cursor-pointer outline-none transition appearance-none shadow-warm-sm ${getStatusStyle(ticket.status)}`}
                             >
                             <option value={MaintenanceStatus.OPEN}>待處理</option>
                             <option value={MaintenanceStatus.IN_PROGRESS}>維修中</option>
@@ -557,14 +557,14 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                             <div className="flex justify-end gap-2">
                             <button
                                 onClick={() => handleOpenEditModal(ticket)}
-                                className="text-stone-400 hover:text-amber-600 transition p-1.5 rounded-full hover:bg-amber-50"
+                                className="text-ink-mute hover:text-accent transition p-1.5 rounded-full hover:bg-accent-soft/40"
                                 title="完整編輯"
                             >
                                 <Edit size={16} />
                             </button>
                             <button
                                 onClick={() => handleDelete(ticket.id)}
-                                className="text-stone-400 hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50"
+                                className="text-ink-mute hover:text-rose-600 transition p-1.5 rounded-full hover:bg-rose-50"
                                 title="刪除"
                             >
                                 <Trash2 size={16} />
@@ -575,7 +575,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                     ))}
                     {filteredAndSortedTickets.length === 0 && (
                         <tr>
-                            <td colSpan={8} className="px-6 py-12 text-center text-stone-400 italic">
+                            <td colSpan={8} className="px-6 py-12 text-center text-ink-mute italic">
                                 目前沒有符合條件的報修紀錄。
                             </td>
                         </tr>
@@ -583,7 +583,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                 </tbody>
                 </table>
             </div>
-            <div className="p-4 bg-stone-50 flex items-center gap-2 text-[11px] text-stone-500 overflow-x-auto whitespace-nowrap">
+            <div className="p-4 bg-bg flex items-center gap-2 text-[11px] text-ink-soft overflow-x-auto whitespace-nowrap">
               <ClipboardList size={12} className="text-amber-500 flex-shrink-0" />
               <span>提示：點擊表格標題（日期、優先級、費用）可進行排序。勾選方塊可進行批次狀態更新。</span>
             </div>
@@ -594,42 +594,42 @@ const Maintenance: React.FC<MaintenanceProps> = ({
           {/* Mobile card view for filters */}
           <div className="sm:hidden space-y-3">
             {filters.map(filter => (
-              <div key={filter.id} className={`rounded-lg shadow-sm border border-stone-200 p-4 ${getModelBgColor(filter.model)}`}>
+              <div key={filter.id} className={`rounded-lg shadow-warm-sm border border-line p-4 ${getModelBgColor(filter.model)}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm font-black text-stone-800">{filter.model}</p>
-                    <p className="text-xs text-stone-500 mt-0.5">{filter.specification}</p>
+                    <p className="text-sm font-black text-ink">{filter.model}</p>
+                    <p className="text-xs text-ink-soft mt-0.5">{filter.specification}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-warm-sm
                       ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' :
-                      filter.status === 'Due Soon' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'}`}>
+                      filter.status === 'Due Soon' ? 'bg-accent-soft text-amber-800 border border-accent-soft' : 'bg-emerald-100 text-emerald-800'}`}>
                       {filter.status === 'Overdue' ? '已過期' : filter.status === 'Due Soon' ? '即將到期' : '良好'}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <p className="text-stone-400 font-bold mb-1">更換週期</p>
-                    <p className="text-stone-700">每 {filter.cycleMonths} 個月</p>
+                    <p className="text-ink-mute font-bold mb-1">更換週期</p>
+                    <p className="text-ink">每 {filter.cycleMonths} 個月</p>
                   </div>
                   <div>
-                    <p className="text-stone-400 font-bold mb-1">預計到期</p>
-                    <p className="text-stone-700 font-bold">{filter.nextDue}</p>
+                    <p className="text-ink-mute font-bold mb-1">預計到期</p>
+                    <p className="text-ink font-bold">{filter.nextDue}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-stone-400 font-bold mb-1">上次更換（可編輯）</p>
+                    <p className="text-ink-mute font-bold mb-1">上次更換（可編輯）</p>
                     <input
                       type="date"
                       value={filter.lastReplaced}
                       onChange={(e) => handleDateChange(filter.id, e.target.value)}
-                      className="text-sm bg-white/60 border border-stone-300 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-500 w-full"
+                      className="text-sm bg-surface/60 border border-line rounded px-2 py-1 outline-none focus:ring-1 focus:ring-accent w-full"
                     />
                   </div>
                 </div>
                 <button
                   onClick={() => handleMarkReplaced(filter.id)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs bg-white/80 text-stone-700 px-3 py-2 rounded-md border border-stone-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all font-bold shadow-sm"
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs bg-surface/80 text-ink px-3 py-2 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
                 >
                   <RefreshCw size={12} /> 一鍵標記今日更換
                 </button>
@@ -638,27 +638,27 @@ const Maintenance: React.FC<MaintenanceProps> = ({
           </div>
 
           {/* Desktop table view for filters */}
-          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <div className="hidden sm:block bg-surface rounded-lg shadow-warm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-orange-100">
-                  <thead className="bg-stone-100">
+              <table className="min-w-full divide-y divide-line">
+                  <thead className="bg-surface-warm">
                   <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">型號 / 規格</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">更換週期</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">上次更換 (可編輯)</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">預計到期</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">狀態</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider whitespace-nowrap">操作</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">型號 / 規格</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">更換週期</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">上次更換 (可編輯)</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">預計到期</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">狀態</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-ink-soft uppercase tracking-wider whitespace-nowrap">操作</th>
                   </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-stone-100">
+                  <tbody className="bg-surface divide-y divide-line">
                   {filters.map(filter => (
                       <tr key={filter.id} className={`${getModelBgColor(filter.model)} transition duration-200`}>
                       <td className="px-6 py-4">
-                          <div className="text-sm font-bold text-stone-800 whitespace-nowrap">{filter.model}</div>
-                          <div className="text-xs text-stone-500 whitespace-nowrap">{filter.specification}</div>
+                          <div className="text-sm font-bold text-ink whitespace-nowrap">{filter.model}</div>
+                          <div className="text-xs text-ink-soft whitespace-nowrap">{filter.specification}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-stone-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-ink-soft">
                           每 {filter.cycleMonths} 個月
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -667,22 +667,22 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                               type="date"
                               value={filter.lastReplaced}
                               onChange={(e) => handleDateChange(filter.id, e.target.value)}
-                              className="text-sm bg-transparent border-b border-dashed border-stone-400 hover:border-amber-500 focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-stone-700 transition"
+                              className="text-sm bg-transparent border-b border-dashed border-stone-400 hover:border-accent focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-ink transition"
                               />
                           </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-stone-700">{filter.nextDue}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-ink">{filter.nextDue}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-warm-sm
                               ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' :
-                              filter.status === 'Due Soon' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'}`}>
+                              filter.status === 'Due Soon' ? 'bg-accent-soft text-amber-800 border border-accent-soft' : 'bg-emerald-100 text-emerald-800'}`}>
                               {filter.status === 'Overdue' ? '已過期' : filter.status === 'Due Soon' ? '即將到期' : '良好'}
                           </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                           <button
                               onClick={() => handleMarkReplaced(filter.id)}
-                              className="flex items-center gap-1 text-xs bg-white/80 text-stone-700 px-3 py-1.5 rounded-md border border-stone-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all font-bold shadow-sm"
+                              className="flex items-center gap-1 text-xs bg-surface/80 text-ink px-3 py-1.5 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
                               title="標記為今日更換"
                           >
                               <RefreshCw size={12} /> 一鍵更新
@@ -693,7 +693,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                   </tbody>
               </table>
             </div>
-            <div className="p-4 bg-stone-50 flex items-center gap-2 text-[11px] text-stone-500 overflow-x-auto whitespace-nowrap">
+            <div className="p-4 bg-bg flex items-center gap-2 text-[11px] text-ink-soft overflow-x-auto whitespace-nowrap">
               <Calendar size={12} className="text-amber-500 flex-shrink-0" />
               <span>提醒：預計到期日前 1 個月將自動轉為「即將到期」狀態。修改「上次更換日期」將自動連動計算。</span>
             </div>
@@ -703,13 +703,13 @@ const Maintenance: React.FC<MaintenanceProps> = ({
 
       {/* Add/Edit Modal (Repair Only) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-orange-50 shrink-0">
-                    <h3 className="text-lg font-bold text-stone-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+            <div className="bg-surface rounded-cozy shadow-warm-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="px-6 py-4 border-b border-line flex justify-between items-center bg-bg shrink-0">
+                    <h3 className="font-serif text-lg font-bold text-ink">
                         {editingTicketId ? '編輯維修紀錄' : '新增維修紀錄'}
                     </h3>
-                    <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-600">
+                    <button onClick={() => setIsModalOpen(false)} className="text-ink-mute hover:text-ink-soft">
                         <X size={20} />
                     </button>
                 </div>
@@ -718,12 +718,12 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-stone-700">報修租客</label>
+                                <label className="text-sm font-semibold text-ink">報修租客</label>
                                 <select 
                                     name="tenantId" 
                                     value={formData.tenantId} 
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                                    className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none bg-surface"
                                     required
                                 >
                                     <option value="" disabled>請選擇租客</option>
@@ -733,25 +733,25 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-stone-700">報修日期</label>
+                                <label className="text-sm font-semibold text-ink">報修日期</label>
                                 <input 
                                     type="date"
                                     name="reportDate" 
                                     value={formData.reportDate} 
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none"
                                     required
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-stone-700">問題類別</label>
+                            <label className="text-sm font-semibold text-ink">問題類別</label>
                             <select 
                                 name="category" 
                                 value={formData.category} 
                                 onChange={handleInputChange}
-                                className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                                className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none bg-surface"
                             >
                                 <option value="Appliance">家電 (Appliance)</option>
                                 <option value="Plumbing">水電管路 (Plumbing)</option>
@@ -762,25 +762,25 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-stone-700">問題描述</label>
+                            <label className="text-sm font-semibold text-ink">問題描述</label>
                             <textarea 
                                 name="description" 
                                 value={formData.description} 
                                 onChange={handleInputChange}
                                 placeholder="請簡述維修狀況..."
-                                className="w-full p-2 border border-stone-300 rounded text-sm h-24 focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                                className="w-full p-2 border border-line rounded text-sm h-24 focus:ring-2 focus:ring-accent outline-none resize-none"
                                 required
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-stone-700">優先等級</label>
+                                <label className="text-sm font-semibold text-ink">優先等級</label>
                                 <select 
                                     name="priority" 
                                     value={formData.priority} 
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                                    className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none bg-surface"
                                 >
                                     <option value={Priority.LOW}>低 (Low)</option>
                                     <option value={Priority.MEDIUM}>中 (Medium)</option>
@@ -788,12 +788,12 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-stone-700">目前狀態</label>
+                                <label className="text-sm font-semibold text-ink">目前狀態</label>
                                 <select 
                                     name="status" 
                                     value={formData.status} 
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                                    className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none bg-surface"
                                 >
                                     <option value={MaintenanceStatus.OPEN}>處理中</option>
                                     <option value={MaintenanceStatus.IN_PROGRESS}>維修中</option>
@@ -803,28 +803,28 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-stone-700">維修費用 (TWD)</label>
+                            <label className="text-sm font-semibold text-ink">維修費用 (TWD)</label>
                             <input 
                                 type="number"
                                 name="cost" 
                                 value={formData.cost} 
                                 onChange={handleInputChange}
-                                className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none"
                                 placeholder="0"
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-stone-700">備註</label>
+                            <label className="text-sm font-semibold text-ink">備註</label>
                             <input 
                                 name="notes" 
                                 value={formData.notes || ''} 
                                 onChange={handleInputChange}
-                                className="w-full p-2 border border-stone-300 rounded text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full p-2 border border-line rounded text-sm focus:ring-2 focus:ring-accent outline-none"
                                 placeholder="處理細節或備註..."
                             />
                         </div>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-stone-100 mt-2">
+                        <div className="flex justify-between items-center pt-4 border-t border-line mt-2">
                             {editingTicketId ? (
                                 <button 
                                     type="button"
@@ -839,13 +839,13 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                                 <button 
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-sm text-stone-600 bg-stone-100 rounded hover:bg-stone-200 transition"
+                                    className="px-4 py-2 text-sm text-ink-soft bg-surface-warm rounded hover:bg-surface-warm transition"
                                 >
                                     取消
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="px-4 py-2 text-sm text-white bg-amber-600 rounded hover:bg-amber-700 transition flex items-center gap-2 shadow-sm"
+                                    className="px-4 py-2 text-sm text-white bg-accent rounded hover:bg-amber-700 transition flex items-center gap-2 shadow-warm-sm"
                                 >
                                     <Save size={16} /> 儲存
                                 </button>
