@@ -144,34 +144,13 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
           </div>
         </div>
 
-        {/* Upload buttons — <label htmlFor> reliably opens system file/photo picker */}
-        <div className="flex gap-2 w-full sm:w-auto">
-          <label
-            htmlFor={photoInputId(selectedRoom)}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shadow-sm active:scale-95 whitespace-nowrap flex-1 sm:flex-none cursor-pointer select-none
-              ${uploading
-                ? 'bg-indigo-300 text-white pointer-events-none'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
-          >
-            {uploading ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> 上傳中...</>
-            ) : (
-              <><Upload size={16} /> 選擇照片</>
-            )}
-          </label>
-
-          {/* Camera shortcut — directly opens camera on mobile; falls back to file picker on desktop */}
-          <label
-            htmlFor={cameraInputId(selectedRoom)}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition shadow-sm active:scale-95 whitespace-nowrap cursor-pointer select-none
-              ${uploading
-                ? 'bg-stone-200 text-stone-400 pointer-events-none'
-                : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200'}`}
-            title="直接拍照上傳（手機）"
-          >
-            <Camera size={16} /> <span className="hidden xs:inline">拍照</span>
-          </label>
-        </div>
+        {/* 上傳中狀態指示（取代原本的兩個按鈕）*/}
+        {uploading && (
+          <div className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 rounded-lg">
+            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            上傳中...
+          </div>
+        )}
       </div>
 
       {/* Room Tabs */}
