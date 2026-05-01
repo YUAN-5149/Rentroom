@@ -3,15 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartLandlord Pro - 智慧房東管理系統</title>
+    <title>家管小屋 · HOME · MANAGE · CARE</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind + 家管小屋 theme tokens (cream) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+              serif: ['"Noto Serif TC"', '"Source Han Serif"', 'serif'],
+              hand: ['Caveat', '"Noto Serif TC"', 'cursive'],
+            },
+            colors: {
+              // 家管小屋 cream palette
+              bg:          '#FBF6EE',
+              surface:     '#FFFFFF',
+              'surface-warm': '#F5EBDA',
+              ink:         '#3A2E22',
+              'ink-soft':  '#7A6A58',
+              'ink-mute':  '#B0A593',
+              line:        '#EADFCC',
+              accent:      '#C9763C',
+              'accent-soft': '#F2D9C0',
+              leaf:        '#7A8B5C',
+              'leaf-soft': '#DDE3C9',
+              warm: {
+                50:  '#FBF6EE',
+                100: '#F5EBDA',
+                200: '#EADFCC',
+                300: '#D6C8B3',
+                400: '#B0A593',
+                500: '#7A6A58',
+                600: '#3A2E22',
+              },
+              terracotta: {
+                50:  '#FBEFE3',
+                100: '#F2D9C0',
+                200: '#E5BC93',
+                300: '#D89764',
+                400: '#C9763C',
+                500: '#A85F2C',
+                600: '#824621',
+              },
+              sage: {
+                50:  '#EEF1E1',
+                100: '#DDE3C9',
+                200: '#BFC9A2',
+                300: '#9DAB7A',
+                400: '#7A8B5C',
+                500: '#5E6E45',
+                600: '#445131',
+              },
+            },
+            boxShadow: {
+              'warm-sm':  '0 2px 6px rgba(58,46,34,0.06)',
+              'warm':     '0 4px 12px rgba(58,46,34,0.08)',
+              'warm-lg':  '0 12px 28px rgba(58,46,34,0.10)',
+              'warm-xl':  '0 30px 60px -30px rgba(58,46,34,0.18)',
+            },
+            borderRadius: {
+              'cozy': '18px',
+              'cozy-lg': '24px',
+            },
+          }
+        }
+      };
+    </script>
+
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      html, body { background-color: #FBF6EE; }
       body {
-        font-family: 'Inter', sans-serif;
-        background-color: #fff7ed; /* orange-50 */
+        font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+        color: #3A2E22;
       }
+      ::-webkit-scrollbar { width: 10px; height: 10px; }
+      ::-webkit-scrollbar-thumb { background: #d6c8b3; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      input::placeholder, textarea::placeholder { color: #B0A593; }
     </style>
+
   <script type="importmap">
 {
   "imports": {
