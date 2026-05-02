@@ -8,7 +8,7 @@ import {
 
 interface RoomConditionProps {
   photos: RoomPhoto[];
-  onAddPhotos: (photos: RoomPhoto[]) => void;
+  onAddPhotos: (files: File[], roomId: RoomId) => Promise<void> | void;
   onUpdateCaption: (id: string, caption: string) => void;
   onDeletePhoto: (id: string) => void;
 }
@@ -40,15 +40,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
 
   const currentRoom = ROOMS.find(r => r.id === selectedRoom)!;
 
-  // 讀取圖片為 base64
-  const readFile = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
+  // 上傳檔案到 Google Drive（透過 App.tsx 的 onAddPhotos handler）
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (arr.length === 0) return;
@@ -61,17 +53,7 @@ const RoomCondition: React.FC<RoomConditionProps> = ({
 
     setUploading(true);
     try {
-      const newPhotos: RoomPhoto[] = await Promise.all(
-        arr.map(async (file) => ({
-          id: `rp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          roomId: selectedRoom,
-          imageData: await readFile(file),
-          caption: '',
-          uploadedAt: new Date().toISOString(),
-          fileName: file.name,
-        }))
-      );
-      onAddPhotos(newPhotos);
+      await onAddPhotos(arr, selectedRoom);
     } finally {
       setUploading(false);
     }

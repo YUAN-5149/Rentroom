@@ -15,13 +15,19 @@ import Login from './components/Login';
 import { mockPayments, mockTenants, mockTickets, mockFilters, mockExpenses, mockReadings } from './services/mockData';
 import { verifyUser, User } from './services/authMock';
 import { PaymentRecord, PaymentStatus, MaintenanceTicket, MaintenanceStatus, Tenant, ExpenseRecord, FilterSchedule, MeterReading, RoomPhoto } from './types';
-import { 
-  syncTenantToSheet, fetchTenantsFromSheet, 
+import {
+  syncTenantToSheet, fetchTenantsFromSheet,
   syncExpenseToSheet, fetchExpensesFromSheet,
   syncPaymentToSheet, fetchPaymentsFromSheet,
   syncMaintenanceToSheet, fetchMaintenanceFromSheet,
   syncMeterToSheet, fetchMetersFromSheet
 } from './services/googleSheetService';
+import {
+  fetchPhotosFromDrive,
+  uploadPhotoToDrive,
+  updatePhotoCaptionOnDrive,
+  deletePhotoFromDrive,
+} from './services/photoApi';
 
 // Sidebar Navigation Component
 const Sidebar = ({ 
@@ -194,6 +200,10 @@ const App: React.FC = () => {
       // 5. Meters
       const cloudMeters = await fetchMetersFromSheet();
       if (cloudMeters && cloudMeters.length > 0) setMeterReadings(cloudMeters);
+
+      // 6. Room photos from Google Drive
+      const cloudPhotos = await fetchPhotosFromDrive();
+      if (cloudPhotos) setRoomPhotos(cloudPhotos);
     };
     loadFromCloud();
   }, []);
@@ -351,17 +361,34 @@ const App: React.FC = () => {
     syncMeterToSheet('DELETE', { id });
   };
 
-  // Room Condition Handlers
-  const handleAddRoomPhotos = (newPhotos: RoomPhoto[]) => {
-    setRoomPhotos(prev => [...newPhotos, ...prev]);
+  // Room Condition Handlers (Google Drive backed)
+  const handleAddRoomPhotos = async (files: File[], roomId: import('./types').RoomId) => {
+    // Upload each file to Drive sequentially; state updates as each finishes.
+    for (const file of files) {
+      try {
+        const cloudPhoto = await uploadPhotoToDrive(file, roomId, '');
+        setRoomPhotos(prev => [cloudPhoto, ...prev]);
+      } catch (err) {
+        console.error('上傳失敗:', file.name, err);
+        alert(`上傳失敗：${file.name}\n${err instanceof Error ? err.message : err}`);
+      }
+    }
   };
 
   const handleUpdateRoomCaption = (id: string, caption: string) => {
+    // Optimistic UI: update locally, then sync to Drive description
     setRoomPhotos(prev => prev.map(p => p.id === id ? { ...p, caption } : p));
+    updatePhotoCaptionOnDrive(id, caption).catch(err => {
+      console.error('更新照片說明失敗:', err);
+    });
   };
 
   const handleDeleteRoomPhoto = (id: string) => {
+    // Optimistic UI: remove locally, then trash on Drive
     setRoomPhotos(prev => prev.filter(p => p.id !== id));
+    deletePhotoFromDrive(id).catch(err => {
+      console.error('Drive 刪除失敗:', err);
+    });
   };
 
   if (!user) return <Login onLogin={handleLogin} error={loginError} />;
