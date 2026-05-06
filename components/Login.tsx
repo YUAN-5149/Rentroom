@@ -82,20 +82,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
             溫柔、穩當地，把這些瑣事一次處理好。
           </p>
         </div>
-
-        {/* Stats row */}
-        <div className="flex items-center gap-7 mt-12 lg:mt-0">
-          {[
-            { n: '24', l: '位租客' },
-            { n: '6',  l: '間套房' },
-            { n: '2024', l: '陪伴起點' },
-          ].map((s, i) => (
-            <div key={i}>
-              <div className="font-serif text-3xl text-ink font-bold">{s.n}</div>
-              <div className="text-[11.5px] text-ink-mute tracking-widest mt-0.5">{s.l}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* === Right form panel === */}

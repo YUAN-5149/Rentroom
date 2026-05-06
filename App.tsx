@@ -218,7 +218,12 @@ const App: React.FC = () => {
 
   const handleLogin = (phone: string) => {
     const verifiedUser = verifyUser(phone);
-    if (verifiedUser) { setUser(verifiedUser); setLoginError(null); } 
+    if (verifiedUser) {
+      setUser(verifiedUser);
+      setLoginError(null);
+      // 登入後一律導回總覽看板（即便先前 hash 停留在其他頁）
+      if (typeof window !== 'undefined') window.location.hash = '#/';
+    }
     else { setLoginError('此手機號碼無存取權限。'); }
   };
 
