@@ -1,53 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Download, X } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 /**
- * PWA 安裝提示按鈕
- *  - 監聽 `beforeinstallprompt`，僅當瀏覽器確認此網站可安裝才顯示
+ * 浮動安裝提示（登入後顯示）
+ *  - 共用 usePWAInstall hook
+ *  - 僅在 Android/Chrome 有原生 prompt 時自動出現
  *  - 使用者按「不要再提示」會記住選擇 7 天
- *  - 已安裝 / 已用 standalone 模式開啟時自動隱藏
+ *  - 已 standalone 自動隱藏
+ *  - iOS 不在此顯示（登入頁的「安裝到主畫面」按鈕已涵蓋）
  */
+
 const DISMISS_KEY = 'sl_pwa_install_dismissed_until';
 
-const isStandalone = () =>
-  (typeof window !== 'undefined' &&
-    (window.matchMedia('(display-mode: standalone)').matches ||
-      // iOS Safari
-      (window.navigator as any).standalone === true));
-
 const InstallPWAButton: React.FC = () => {
-  const [evt, setEvt] = useState<any>(null);
-  const [hidden, setHidden] = useState(true);
-
-  useEffect(() => {
-    if (isStandalone()) return; // 已是 PWA 模式
-
+  const pwa = usePWAInstall();
+  const [hidden, setHidden] = useState(() => {
     const dismissUntil = Number(localStorage.getItem(DISMISS_KEY) || 0);
-    if (dismissUntil && Date.now() < dismissUntil) return;
+    return !!dismissUntil && Date.now() < dismissUntil;
+  });
 
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setEvt(e);
-      setHidden(false);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-
-    const installed = () => setHidden(true);
-    window.addEventListener('appinstalled', installed);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installed);
-    };
-  }, []);
-
-  if (hidden || !evt) return null;
-
-  const install = async () => {
-    evt.prompt();
-    const result = await evt.userChoice;
-    if (result.outcome === 'accepted') setHidden(true);
-  };
+  if (pwa.isStandalone || hidden || !pwa.canPrompt) return null;
 
   const dismiss = () => {
     const week = 7 * 24 * 60 * 60 * 1000;
@@ -60,8 +33,8 @@ const InstallPWAButton: React.FC = () => {
       <Download size={16} strokeWidth={1.8} className="flex-shrink-0" />
       <span className="text-[13px] font-semibold flex-1">把家管小屋加到主畫面</span>
       <button
-        onClick={install}
-        className="px-3 py-1 bg-white text-accent rounded-full text-xs font-bold hover:bg-bg active:scale-95 transition"
+        onClick={() => pwa.install()}
+        className="px-3 py-1 bg-surface text-accent rounded-full text-xs font-bold hover:bg-bg active:scale-95 transition"
       >
         安裝
       </button>

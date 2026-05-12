@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Lock, Phone, Eye, EyeOff, Coffee, Leaf } from 'lucide-react';
+import { ArrowRight, Lock, Phone, Eye, EyeOff, Coffee, Leaf, Download, Smartphone, CheckCircle2 } from 'lucide-react';
 import { validatePhoneFormat } from '../services/authMock';
+import { usePWAInstall } from '../hooks/usePWAInstall';
+import IOSInstallGuide from './IOSInstallGuide';
 
 interface LoginProps {
   onLogin: (phone: string) => void;
@@ -11,6 +13,20 @@ const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
   const [phone, setPhone] = useState('');
   const [validationError, setValidationError] = useState('');
   const [showPhone, setShowPhone] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
+  const pwa = usePWAInstall();
+
+  const handleInstallClick = async () => {
+    if (pwa.canPrompt) {
+      await pwa.install();
+    } else if (pwa.needsIOSGuide) {
+      setShowGuide(true);
+    } else {
+      // 桌機 / Android 但瀏覽器未提供 prompt（多半因為已安裝或不符條件）
+      setShowGuide(true);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,8 +162,31 @@ const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
             白名單驗證 · 安全溫暖<br />
             <span className="text-ink-soft font-hand text-sm">see you at home ·</span>
           </div>
+
+          {/* === PWA 安裝入口 === */}
+          {!pwa.isStandalone && (
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-accent-soft hover:bg-accent hover:text-white text-accent rounded-xl text-[13px] font-semibold transition active:scale-[0.98] border border-accent/20"
+            >
+              <Smartphone size={16} strokeWidth={1.8} />
+              <span>安裝到主畫面 · 像 App 一樣使用</span>
+              <Download size={14} strokeWidth={2} />
+            </button>
+          )}
+
+          {pwa.isStandalone && (
+            <div className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 text-leaf text-[12.5px] font-semibold">
+              <CheckCircle2 size={15} strokeWidth={2} />
+              已在 App 模式運行
+            </div>
+          )}
         </div>
       </div>
+
+      {/* iOS 安裝教學 modal */}
+      <IOSInstallGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 };
