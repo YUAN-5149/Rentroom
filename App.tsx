@@ -11,6 +11,7 @@ import Expenses from './components/Expenses';
 import Meters from './components/Meters';
 import RoomCondition from './components/RoomCondition';
 import Login from './components/Login';
+import InstallPWAButton from './components/InstallPWAButton';
 
 import { mockPayments, mockTenants, mockTickets, mockFilters, mockExpenses, mockReadings } from './services/mockData';
 import { verifyUser, User } from './services/authMock';
@@ -480,6 +481,7 @@ const App: React.FC = () => {
             </Routes>
           </main>
         </div>
+        <InstallPWAButton />
       </div>
     </HashRouter>
   );

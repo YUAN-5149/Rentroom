@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 背景：奶油白 + 徑向暖色 -->
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#FFF8EB"/>
+      <stop offset="60%" stop-color="#FBF6EE"/>
+      <stop offset="100%" stop-color="#F5EBDA"/>
+    </radialGradient>
+    <linearGradient id="cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D89764"/>
+      <stop offset="100%" stop-color="#C9763C"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- 葉子裝飾（右上）-->
+  <g transform="translate(380 90) rotate(20)" opacity="0.18">
+    <path d="M0 70 C 0 30 30 0 70 0 C 70 40 40 70 0 70 Z" fill="#7A8B5C"/>
+    <path d="M5 65 L 60 10" stroke="#7A8B5C" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- 馬克杯（中央偏左，輕微傾斜）-->
+  <g transform="translate(108 160) rotate(-5 145 120)">
+    <!-- 蒸氣 -->
+    <g opacity="0.6">
+      <path d="M75 -15 Q 65 -35 80 -55 Q 100 -75 85 -100"
+            stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M130 -20 Q 115 -45 135 -65 Q 155 -85 140 -110"
+            stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M180 -15 Q 170 -35 185 -55 Q 205 -75 190 -100"
+            stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <!-- 杯身 -->
+    <rect x="20" y="0" width="220" height="190" rx="22" fill="url(#cup)"/>
+
+    <!-- 杯把 -->
+    <path d="M240 30 Q 295 30 295 90 Q 295 150 240 150 L 240 130 Q 265 130 265 90 Q 265 50 240 50 Z"
+          fill="#A85F2C"/>
+
+    <!-- 杯底陰影 -->
+    <ellipse cx="130" cy="195" rx="115" ry="14" fill="#A85F2C" opacity="0.4"/>
+
+    <!-- 杯口表情 -->
+    <circle cx="130" cy="42" r="3.5" fill="#FFF8EB"/>
+  </g>
+
+  <!-- 標題 -->
+  <text x="256" y="430"
+        text-anchor="middle"
+        font-family="'Noto Serif TC', 'Source Han Serif', serif"
+        font-weight="900"
+        font-size="62"
+        fill="#3A2E22"
+        letter-spacing="4">家管小屋</text>
+
+  <text x="256" y="468"
+        text-anchor="middle"
+        font-family="ui-sans-serif, system-ui, sans-serif"
+        font-weight="700"
+        font-size="13"
+        fill="#B0A593"
+        letter-spacing="6">HOME · MANAGE · CARE</text>
+</svg>

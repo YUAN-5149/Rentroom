@@ -1,0 +1,58 @@
+{
+  "name": "家管小屋 · 租屋管理系統",
+  "short_name": "家管小屋",
+  "description": "把每位租客當家人一樣照顧 — 房租、合約、維修、水電、套房原狀，一次處理好。",
+  "lang": "zh-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBF6EE",
+  "theme_color": "#C9763C",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    {
+      "src": "./icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "總覽看板",
+      "short_name": "看板",
+      "url": "./#/",
+      "description": "查看本月收支、待繳款項"
+    },
+    {
+      "name": "新增抄表",
+      "short_name": "抄表",
+      "url": "./#/meters",
+      "description": "紀錄電表度數"
+    },
+    {
+      "name": "套房原狀",
+      "short_name": "原狀",
+      "url": "./#/room-condition",
+      "description": "上傳/查看套房照片"
+    }
+  ]
+}

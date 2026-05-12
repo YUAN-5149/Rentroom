@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Maskable: 主要內容須在中央 80% 範圍內，邊緣 10% 會被裁切 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D89764"/>
+      <stop offset="100%" stop-color="#C9763C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 整體背景（會被遮罩成圓形或方形）-->
+  <rect width="512" height="512" fill="#F5EBDA"/>
+
+  <!-- 主視覺集中在中央 80% (51~461) -->
+  <g transform="translate(140 165) rotate(-5 116 96)">
+    <!-- 蒸氣 -->
+    <g opacity="0.55">
+      <path d="M60 -10 Q 50 -32 65 -52" stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M105 -10 Q 92 -38 110 -58" stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M150 -10 Q 140 -32 155 -52" stroke="#C9763C" stroke-width="6" stroke-linecap="round" fill="none"/>
+    </g>
+    <rect x="16" y="0" width="180" height="155" rx="20" fill="url(#cup)"/>
+    <path d="M196 25 Q 245 25 245 75 Q 245 125 196 125 L 196 108 Q 218 108 218 75 Q 218 42 196 42 Z" fill="#A85F2C"/>
+    <ellipse cx="106" cy="160" rx="95" ry="12" fill="#A85F2C" opacity="0.4"/>
+  </g>
+
+  <text x="256" y="395" text-anchor="middle"
+        font-family="'Noto Serif TC', 'Source Han Serif', serif"
+        font-weight="900" font-size="52" fill="#3A2E22" letter-spacing="3">家管小屋</text>
+</svg>

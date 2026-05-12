@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <defs>
+    <linearGradient id="cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D89764"/>
+      <stop offset="100%" stop-color="#C9763C"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="#FBF6EE"/>
+  <g transform="translate(34 48) rotate(-5 56 47)">
+    <g opacity="0.55">
+      <path d="M28 -5 Q 23 -17 32 -28" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M51 -5 Q 45 -20 56 -32" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M73 -5 Q 68 -17 78 -28" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </g>
+    <rect x="8" y="0" width="86" height="76" rx="10" fill="url(#cup)"/>
+    <path d="M94 13 Q 116 13 116 38 Q 116 62 94 62 L 94 53 Q 105 53 105 38 Q 105 22 94 22 Z" fill="#A85F2C"/>
+    <ellipse cx="51" cy="78" rx="47" ry="5.5" fill="#A85F2C" opacity="0.4"/>
+  </g>
+  <text x="90" y="150" text-anchor="middle"
+        font-family="'Noto Serif TC', serif"
+        font-weight="900" font-size="22" fill="#3A2E22" letter-spacing="2">家管小屋</text>
+</svg>

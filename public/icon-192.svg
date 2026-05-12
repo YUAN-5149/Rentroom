@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#FFF8EB"/>
+      <stop offset="60%" stop-color="#FBF6EE"/>
+      <stop offset="100%" stop-color="#F5EBDA"/>
+    </radialGradient>
+    <linearGradient id="cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D89764"/>
+      <stop offset="100%" stop-color="#C9763C"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="url(#bg)"/>
+
+  <!-- 馬克杯（簡化版，居中）-->
+  <g transform="translate(36 50) rotate(-5 60 50)">
+    <!-- 蒸氣 -->
+    <g opacity="0.55">
+      <path d="M30 -5 Q 25 -18 35 -30" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M55 -5 Q 48 -22 60 -34" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M78 -5 Q 73 -18 83 -30" stroke="#C9763C" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </g>
+    <rect x="8" y="0" width="92" height="80" rx="11" fill="url(#cup)"/>
+    <path d="M100 14 Q 124 14 124 40 Q 124 66 100 66 L 100 56 Q 112 56 112 40 Q 112 24 100 24 Z" fill="#A85F2C"/>
+    <ellipse cx="54" cy="82" rx="50" ry="6" fill="#A85F2C" opacity="0.4"/>
+  </g>
+
+  <text x="96" y="160" text-anchor="middle"
+        font-family="'Noto Serif TC', 'Source Han Serif', serif"
+        font-weight="900" font-size="26" fill="#3A2E22" letter-spacing="2">家管小屋</text>
+</svg>
