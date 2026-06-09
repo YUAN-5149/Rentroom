@@ -189,13 +189,14 @@ const App: React.FC = () => {
       // 4. Maintenance (Repairs & Filters)
       const cloudMaintenance = await fetchMaintenanceFromSheet();
       if (cloudMaintenance) {
-          if (cloudMaintenance.repairs.length > 0) {
+          if (cloudMaintenance.repairs && cloudMaintenance.repairs.length > 0) {
               setTickets(cloudMaintenance.repairs);
           }
-          // Temporarily disable overwriting filters from cloud to ensure mock data (new specs) is shown
-          // if (cloudMaintenance.filters.length > 0) {
-          //    setFilters(cloudMaintenance.filters);
-          // }
+          // 從雲端 Sheet 載入濾心資料（Sheet 為資料庫的單一真實來源）
+          // 只有當雲端確實有資料時才覆蓋本機，避免抓取失敗時清空畫面
+          if (cloudMaintenance.filters && cloudMaintenance.filters.length > 0) {
+              setFilters(cloudMaintenance.filters);
+          }
       }
 
       // 5. Meters
