@@ -151,9 +151,23 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : mockTickets;
   });
 
+  // 驗證濾心資料是否有效（避免欄位對不上的壞資料導致畫面顯示 NaN / 空白）
+  const isValidFilter = (f: any): boolean =>
+    !!f && typeof f.model === 'string' && f.model.trim() !== '' &&
+    Number.isFinite(Number(f.cycleMonths)) && Number(f.cycleMonths) > 0;
+  const isValidFilterList = (list: any): list is FilterSchedule[] =>
+    Array.isArray(list) && list.length > 0 && list.every(isValidFilter);
+
   const [filters, setFilters] = useState<FilterSchedule[]>(() => {
-    const saved = localStorage.getItem('sl_filters_v2');
-    return saved !== null ? JSON.parse(saved) : mockFilters;
+    try {
+      const saved = localStorage.getItem('sl_filters_v2');
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        // 本機快取若是壞資料（例如先前雲端讀取污染），改用內建預設值
+        if (isValidFilterList(parsed)) return parsed;
+      }
+    } catch { /* ignore corrupt cache */ }
+    return mockFilters;
   });
 
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => {
@@ -193,8 +207,9 @@ const App: React.FC = () => {
               setTickets(cloudMaintenance.repairs);
           }
           // 從雲端 Sheet 載入濾心資料（Sheet 為資料庫的單一真實來源）
-          // 只有當雲端確實有資料時才覆蓋本機，避免抓取失敗時清空畫面
-          if (cloudMaintenance.filters && cloudMaintenance.filters.length > 0) {
+          // 僅在雲端資料「有效」時才覆蓋本機：若 Sheet 欄位對不上（型號空白 / cycleMonths 為 NaN）
+          // 就保留本機資料，避免把畫面洗成空白或 NaN。
+          if (isValidFilterList(cloudMaintenance.filters)) {
               setFilters(cloudMaintenance.filters);
           }
       }
