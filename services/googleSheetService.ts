@@ -289,16 +289,22 @@ export const fetchMaintenanceFromSheet = async (): Promise<{ repairs: Maintenanc
         const json = await response.json();
         const rawFilters = Array.isArray(json) ? json : (json.data || []);
         if (Array.isArray(rawFilters)) {
-            filters = rawFilters.map((row: any) => ({
-                id: row.id,
-                model: row.model,
-                specification: row.specification,
-                cycleMonths: Number(row.cycleMonths),
-                location: row.location,
-                lastReplaced: row.lastReplaced,
-                nextDue: row.nextDue,
-                status: FILTER_STATUS_TO_EN[row.status] || 'Good'
-            }));
+            filters = rawFilters.map((rawRow: any) => {
+                // 將欄位名稱統一轉小寫，容忍 Sheet 標題列大小寫差異
+                // （例如 Sheet 為 ID/Model/CycleMonths/LastReplaced/NextDue/Status）
+                const row: Record<string, any> = {};
+                Object.keys(rawRow || {}).forEach(k => { row[k.toLowerCase()] = rawRow[k]; });
+                return {
+                    id: row.id,
+                    model: row.model,
+                    specification: row.specification,
+                    cycleMonths: Number(row.cyclemonths),
+                    location: row.location,
+                    lastReplaced: row.lastreplaced,
+                    nextDue: row.nextdue,
+                    status: FILTER_STATUS_TO_EN[row.status] || 'Good'
+                };
+            });
         } else filters = [];
     } catch (e) { filters = null; }
   }
