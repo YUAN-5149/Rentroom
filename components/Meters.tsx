@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MeterReading, RoomId } from '../types';
-import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle, Home } from 'lucide-react';
+import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle, Home, BarChart3, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface MetersProps {
@@ -11,12 +11,15 @@ interface MetersProps {
 }
 
 // 房間方塊定義（配色與「套房原狀」一致）
-const ROOMS: { id: RoomId; label: string; color: string; bg: string; ring: string }[] = [
-  { id: '1', label: '第一間', color: 'text-sky-700',     bg: 'bg-sky-50',     ring: 'border-sky-300'     },
-  { id: '2', label: '第二間', color: 'text-leaf', bg: 'bg-leaf-soft/50', ring: 'border-emerald-300' },
-  { id: '3', label: '第三間', color: 'text-accent',   bg: 'bg-accent-soft/40',   ring: 'border-amber-300'   },
-  { id: '4', label: '第四間', color: 'text-rose-700',    bg: 'bg-rose-50',    ring: 'border-rose-300'    },
+const ROOMS: { id: RoomId; label: string; color: string; bg: string; ring: string; bar: string }[] = [
+  { id: '1', label: '第一間', color: 'text-sky-700',     bg: 'bg-sky-50',     ring: 'border-sky-300',     bar: 'bg-sky-400'     },
+  { id: '2', label: '第二間', color: 'text-leaf', bg: 'bg-leaf-soft/50', ring: 'border-emerald-300', bar: 'bg-emerald-400' },
+  { id: '3', label: '第三間', color: 'text-accent',   bg: 'bg-accent-soft/40',   ring: 'border-amber-300',   bar: 'bg-amber-400'   },
+  { id: '4', label: '第四間', color: 'text-rose-700',    bg: 'bg-rose-50',    ring: 'border-rose-300',    bar: 'bg-rose-400'    },
 ];
+
+// 顯示用日期格式化：接受 'YYYY-MM-DD' 或 ISO datetime，統一只取日期部分（避免時區位移）
+const fmtDate = (d?: string): string => (d || '').slice(0, 10);
 
 // 由 meterName 推斷房號（用於舊資料；找不到時回傳 undefined）
 const inferRoomId = (meterName: string): RoomId | undefined => {
@@ -95,6 +98,59 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [readings, searchQuery, selectedTab]);
+
+  // 月度用電趨勢（依目前篩選的房間/搜尋連動）
+  const monthlyUsage = useMemo(() => {
+    const map = new Map<string, { usage: number; cost: number }>();
+    filteredReadings.forEach(r => {
+      const ym = (r.date || '').slice(0, 7); // YYYY-MM
+      if (!ym) return;
+      const cur = map.get(ym) || { usage: 0, cost: 0 };
+      cur.usage += r.usage || 0;
+      cur.cost += r.totalCost || 0;
+      map.set(ym, cur);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([ym, v]) => ({
+        ym,
+        usage: v.usage,
+        cost: v.cost,
+        label: `${Number(ym.slice(5, 7))}月`,
+        year: ym.slice(0, 4),
+      }));
+  }, [filteredReadings]);
+
+  const maxMonthlyUsage = useMemo(
+    () => Math.max(...monthlyUsage.map(m => m.usage), 1),
+    [monthlyUsage]
+  );
+
+  // 各套房累計用電與電費（跨全部資料，用於比較）
+  const usageByRoom = useMemo(() => {
+    const totals: Record<RoomId, { usage: number; cost: number }> = {
+      '1': { usage: 0, cost: 0 }, '2': { usage: 0, cost: 0 },
+      '3': { usage: 0, cost: 0 }, '4': { usage: 0, cost: 0 },
+    };
+    readings.forEach(r => {
+      const rid = getRoomId(r);
+      if (rid) {
+        totals[rid].usage += r.usage || 0;
+        totals[rid].cost += r.totalCost || 0;
+      }
+    });
+    return totals;
+  }, [readings]);
+
+  const maxRoomUsage = useMemo(
+    () => Math.max(...ROOMS.map(r => usageByRoom[r.id].usage), 1),
+    [usageByRoom]
+  );
+
+  // 目前圖表的範圍說明文字
+  const scopeLabel = selectedTab === 'all' ? '全部套房'
+    : selectedTab === 'unassigned' ? '未分類'
+    : ROOMS.find(r => r.id === selectedTab)?.label ?? '';
 
   // 當選擇電表名稱時，自動帶入上次讀數
   const handleMeterNameChange = (name: string) => {
@@ -314,6 +370,83 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
         )}
       </div>
 
+      {/* 視覺化儀表板 */}
+      {readings.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* 月度用電趨勢 */}
+          <div className="bg-surface p-5 rounded-lg shadow-warm-sm border border-line">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-serif font-bold text-ink flex items-center gap-2">
+                <BarChart3 size={18} className="text-accent" /> 月度用電趨勢
+              </h3>
+              <span className="text-[11px] text-ink-mute bg-bg px-2 py-1 rounded-full font-bold">{scopeLabel} · 單位：度</span>
+            </div>
+            {monthlyUsage.length === 0 ? (
+              <div className="h-44 flex items-center justify-center text-ink-mute text-sm italic">此範圍尚無資料</div>
+            ) : (
+              <>
+                <div className="flex items-end gap-2 sm:gap-3" style={{ height: 170 }}>
+                  {monthlyUsage.map(m => {
+                    const barH = Math.max(6, Math.round((m.usage / maxMonthlyUsage) * 130));
+                    return (
+                      <div key={m.ym} className="flex-1 flex flex-col items-center justify-end group">
+                        <span className="text-[11px] font-black text-ink mb-1">{m.usage.toLocaleString()}</span>
+                        <div
+                          className="w-full max-w-[52px] mx-auto rounded-t-lg bg-gradient-to-t from-accent to-amber-300 shadow-warm-sm transition-all group-hover:from-amber-600 group-hover:to-amber-400"
+                          style={{ height: barH }}
+                          title={`${m.year}-${m.ym.slice(5, 7)}：${m.usage} 度 · $${m.cost.toLocaleString()}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2 sm:gap-3 mt-2">
+                  {monthlyUsage.map(m => (
+                    <div key={m.ym} className="flex-1 text-center text-[11px] text-ink-mute font-bold whitespace-nowrap">{m.label}</div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 各套房用電比較 */}
+          <div className="bg-surface p-5 rounded-lg shadow-warm-sm border border-line">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-serif font-bold text-ink flex items-center gap-2">
+                <TrendingUp size={18} className="text-leaf" /> 各套房累計用電
+              </h3>
+              <span className="text-[11px] text-ink-mute bg-bg px-2 py-1 rounded-full font-bold">全期間比較</span>
+            </div>
+            <div className="space-y-4 py-1">
+              {ROOMS.map(room => {
+                const u = usageByRoom[room.id].usage;
+                const c = usageByRoom[room.id].cost;
+                const w = (u / maxRoomUsage) * 100;
+                return (
+                  <div key={room.id} className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border-2 flex-shrink-0 ${room.bg} ${room.color} ${room.ring}`}>
+                      {room.id}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline text-xs mb-1.5">
+                        <span className="font-bold text-ink-soft">{room.label}</span>
+                        <span className="font-black text-ink">
+                          {u.toLocaleString()} 度
+                          <span className="text-ink-mute font-medium"> · ${c.toLocaleString()}</span>
+                        </span>
+                      </div>
+                      <div className="h-3 rounded-full bg-bg overflow-hidden">
+                        <div className={`h-full rounded-full ${room.bar} transition-all`} style={{ width: `${w}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile card view */}
       <div className="sm:hidden space-y-3">
         {filteredReadings.map((reading) => {
@@ -335,7 +468,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                 )}
                 <div>
                   <p className="text-sm font-bold text-ink">{reading.meterName}</p>
-                  <p className="text-xs text-ink-mute">{reading.date}</p>
+                  <p className="text-xs text-ink-mute">{fmtDate(reading.date)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -411,7 +544,7 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 {reading.note && <p className="text-xs text-ink-mute pl-9 mt-1">{reading.note}</p>}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-ink-soft font-medium">
-                                {reading.date}
+                                {fmtDate(reading.date)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-bold text-ink">{reading.currentReading}</div>
