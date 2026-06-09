@@ -34,6 +34,10 @@ const Maintenance: React.FC<MaintenanceProps> = ({
   // Removed localFilters state, using props 'filters' directly
   const [selectedTicketIds, setSelectedTicketIds] = useState<string[]>([]);
 
+  // --- Filter date staging: edit stages a pending date; 確定 commits & syncs to Sheet ---
+  const [pendingDates, setPendingDates] = useState<Record<string, string>>({});
+  const [savedFlash, setSavedFlash] = useState<Record<string, boolean>>({});
+
   // --- Filtering & Sorting State ---
   const [filterStatus, setFilterStatus] = useState<'ALL' | MaintenanceStatus>('ALL');
   const [filterPriority, setFilterPriority] = useState<'ALL' | Priority>('ALL');
@@ -80,23 +84,77 @@ const Maintenance: React.FC<MaintenanceProps> = ({
     return date.toISOString().split('T')[0];
   };
 
-  const handleDateChange = (id: string, newDate: string) => {
-    const filter = filters.find(f => f.id === id);
-    if (filter) {
-        const nextDue = addMonths(newDate, filter.cycleMonths);
-        const updatedFilter = {
-            ...filter,
-            lastReplaced: newDate,
-            nextDue: nextDue,
-            status: calculateStatus(nextDue)
-        };
-        onUpdateFilter(updatedFilter);
-    }
+  // Date currently shown in the input (staged value if edited, else the saved value)
+  const getDisplayDate = (filter: FilterSchedule): string =>
+    pendingDates[filter.id] !== undefined ? pendingDates[filter.id] : filter.lastReplaced;
+
+  // True when there's an edited-but-not-yet-confirmed date for this filter
+  const isPending = (filter: FilterSchedule): boolean =>
+    pendingDates[filter.id] !== undefined && pendingDates[filter.id] !== filter.lastReplaced;
+
+  // Live preview of 預計到期 based on the staged date (before confirming)
+  const getPreviewDue = (filter: FilterSchedule): string => {
+    const d = getDisplayDate(filter);
+    return d ? addMonths(d, filter.cycleMonths) : filter.nextDue;
   };
 
+  // Editing the date only stages it locally — nothing is saved yet
+  const handleDateInput = (id: string, newDate: string) => {
+    setPendingDates(prev => ({ ...prev, [id]: newDate }));
+  };
+
+  const flashSaved = (id: string) => {
+    setSavedFlash(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setSavedFlash(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }, 2000);
+  };
+
+  const clearPending = (id: string) => {
+    setPendingDates(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  // 確定: commit the staged date — this is the only thing that writes to the Google Sheet
+  const commitDate = (id: string) => {
+    const filter = filters.find(f => f.id === id);
+    if (!filter) return;
+    const newDate = pendingDates[id] !== undefined ? pendingDates[id] : filter.lastReplaced;
+    if (!newDate) return;
+    const nextDue = addMonths(newDate, filter.cycleMonths);
+    const updatedFilter: FilterSchedule = {
+      ...filter,
+      lastReplaced: newDate,
+      nextDue: nextDue,
+      status: calculateStatus(nextDue)
+    };
+    onUpdateFilter(updatedFilter); // → syncMaintenanceToSheet('UPDATE', 'FILTER', ...)
+    clearPending(id);
+    flashSaved(id);
+  };
+
+  // 一鍵今日: deliberate single action — set today's date and save immediately
   const handleMarkReplaced = (id: string) => {
+    const filter = filters.find(f => f.id === id);
+    if (!filter) return;
     const today = new Date().toISOString().split('T')[0];
-    handleDateChange(id, today);
+    const nextDue = addMonths(today, filter.cycleMonths);
+    const updatedFilter: FilterSchedule = {
+      ...filter,
+      lastReplaced: today,
+      nextDue: nextDue,
+      status: calculateStatus(nextDue)
+    };
+    onUpdateFilter(updatedFilter);
+    clearPending(id);
+    flashSaved(id);
   };
 
   const getModelBgColor = (model: string) => {
@@ -614,25 +672,38 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                     <p className="text-ink">每 {filter.cycleMonths} 個月</p>
                   </div>
                   <div>
-                    <p className="text-ink-mute font-bold mb-1">預計到期</p>
-                    <p className="text-ink font-bold">{filter.nextDue}</p>
+                    <p className="text-ink-mute font-bold mb-1">預計到期{isPending(filter) && <span className="text-accent">（預覽）</span>}</p>
+                    <p className={`font-bold ${isPending(filter) ? 'text-accent' : 'text-ink'}`}>{getPreviewDue(filter)}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-ink-mute font-bold mb-1">上次更換（可編輯）</p>
+                    <p className="text-ink-mute font-bold mb-1 flex items-center gap-1.5">
+                      上次更換（可編輯）
+                      {isPending(filter) && <span className="text-[10px] px-1.5 py-0.5 bg-accent-soft text-amber-800 rounded-full">未儲存</span>}
+                      {savedFlash[filter.id] && <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">已儲存 ✓</span>}
+                    </p>
                     <input
                       type="date"
-                      value={filter.lastReplaced}
-                      onChange={(e) => handleDateChange(filter.id, e.target.value)}
-                      className="text-sm bg-surface/60 border border-line rounded px-2 py-1 outline-none focus:ring-1 focus:ring-accent w-full"
+                      value={getDisplayDate(filter)}
+                      onChange={(e) => handleDateInput(filter.id, e.target.value)}
+                      className={`text-sm bg-surface/60 border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-accent w-full ${isPending(filter) ? 'border-accent' : 'border-line'}`}
                     />
                   </div>
                 </div>
-                <button
-                  onClick={() => handleMarkReplaced(filter.id)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs bg-surface/80 text-ink px-3 py-2 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
-                >
-                  <RefreshCw size={12} /> 一鍵標記今日更換
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => commitDate(filter.id)}
+                    disabled={!isPending(filter)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-md font-bold shadow-warm-sm transition-all ${isPending(filter) ? 'bg-accent text-white border border-accent hover:bg-amber-700' : 'bg-surface/60 text-ink-mute border border-line cursor-not-allowed'}`}
+                  >
+                    <CheckCircle size={12} /> 確定儲存
+                  </button>
+                  <button
+                    onClick={() => handleMarkReplaced(filter.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs bg-surface/80 text-ink px-3 py-2 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
+                  >
+                    <RefreshCw size={12} /> 一鍵今日
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -665,13 +736,18 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                           <div className="flex items-center gap-2">
                               <input
                               type="date"
-                              value={filter.lastReplaced}
-                              onChange={(e) => handleDateChange(filter.id, e.target.value)}
-                              className="text-sm bg-transparent border-b border-dashed border-stone-400 hover:border-accent focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-ink transition"
+                              value={getDisplayDate(filter)}
+                              onChange={(e) => handleDateInput(filter.id, e.target.value)}
+                              className={`text-sm bg-transparent border-b border-dashed hover:border-accent focus:border-amber-600 focus:ring-0 outline-none px-1 py-0.5 text-ink transition ${isPending(filter) ? 'border-accent text-accent font-bold' : 'border-stone-400'}`}
                               />
+                              {isPending(filter) && <span className="text-[10px] px-1.5 py-0.5 bg-accent-soft text-amber-800 rounded-full font-bold">未儲存</span>}
+                              {savedFlash[filter.id] && <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold">已儲存 ✓</span>}
                           </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-ink">{filter.nextDue}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
+                          <span className={isPending(filter) ? 'text-accent' : 'text-ink'}>{getPreviewDue(filter)}</span>
+                          {isPending(filter) && <span className="block text-[10px] text-ink-mute font-normal">確定後更新</span>}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-warm-sm
                               ${filter.status === 'Overdue' ? 'bg-rose-100 text-rose-800' :
@@ -680,13 +756,23 @@ const Maintenance: React.FC<MaintenanceProps> = ({
                           </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                              onClick={() => handleMarkReplaced(filter.id)}
-                              className="flex items-center gap-1 text-xs bg-surface/80 text-ink px-3 py-1.5 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
-                              title="標記為今日更換"
-                          >
-                              <RefreshCw size={12} /> 一鍵更新
-                          </button>
+                          <div className="flex items-center gap-2">
+                              <button
+                                  onClick={() => commitDate(filter.id)}
+                                  disabled={!isPending(filter)}
+                                  className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-md font-bold shadow-warm-sm transition-all ${isPending(filter) ? 'bg-accent text-white border border-accent hover:bg-amber-700' : 'bg-surface/60 text-ink-mute border border-line cursor-not-allowed'}`}
+                                  title="確認並儲存修改後的日期"
+                              >
+                                  <CheckCircle size={12} /> 確定
+                              </button>
+                              <button
+                                  onClick={() => handleMarkReplaced(filter.id)}
+                                  className="flex items-center gap-1 text-xs bg-surface/80 text-ink px-3 py-1.5 rounded-md border border-line hover:bg-amber-500 hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm"
+                                  title="標記為今日更換並立即儲存"
+                              >
+                                  <RefreshCw size={12} /> 一鍵今日
+                              </button>
+                          </div>
                       </td>
                       </tr>
                   ))}
@@ -695,7 +781,7 @@ const Maintenance: React.FC<MaintenanceProps> = ({
             </div>
             <div className="p-4 bg-bg flex items-center gap-2 text-[11px] text-ink-soft overflow-x-auto whitespace-nowrap">
               <Calendar size={12} className="text-amber-500 flex-shrink-0" />
-              <span>提醒：預計到期日前 1 個月將自動轉為「即將到期」狀態。修改「上次更換日期」將自動連動計算。</span>
+              <span>提醒：修改「上次更換日期」後需按下「確定」才會儲存至雲端 Sheet；「一鍵今日」會直接標記今日並儲存。預計到期日前 1 個月自動轉為「即將到期」。</span>
             </div>
           </div>
         </div>
