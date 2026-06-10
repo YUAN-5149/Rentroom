@@ -1,19 +1,78 @@
 
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { PaymentRecord, PaymentStatus, ExpenseRecord } from '../types';
-import { TrendingUp, TrendingDown, AlertCircle, LayoutGrid, Wallet, Scale, ChevronLeft, ChevronRight, Sparkles, Leaf } from 'lucide-react';
+import { PaymentRecord, PaymentStatus, ExpenseRecord, Tenant, FilterSchedule } from '../types';
+import { TrendingUp, TrendingDown, AlertCircle, LayoutGrid, Wallet, Scale, ChevronLeft, ChevronRight, Sparkles, Leaf, BellRing, ChevronRight as Chevron, Wrench, ScrollText, Coins } from 'lucide-react';
 
 interface DashboardProps {
   payments: PaymentRecord[];
   expenses: ExpenseRecord[];
+  tenants: Tenant[];
+  filters: FilterSchedule[];
+}
+
+interface Reminder {
+  tone: 'rose' | 'amber';
+  kind: 'payment' | 'lease' | 'filter';
+  text: string;
+  to: string;
 }
 
 // 家管小屋 cream palette for charts
 const PIE_COLORS = ['#7A8B5C', '#C9763C', '#C46A6A']; // leaf / accent / rose
 
-const Dashboard: React.FC<DashboardProps> = ({ payments, expenses }) => {
+const Dashboard: React.FC<DashboardProps> = ({ payments, expenses, tenants, filters }) => {
   const [year, setYear] = useState(new Date().getFullYear());
+
+  // === 到期提醒中心（不受年度切換影響，永遠以「今天」為基準） ===
+  const reminders = useMemo<Reminder[]>(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const list: Reminder[] = [];
+    const typeLabel = (t: string) => t === 'Rent' ? '租金' : t === 'Utility' ? '水電費' : t === 'Deposit' ? '押金' : '款項';
+
+    // 1. 逾期帳單
+    payments
+      .filter(p => p.status === PaymentStatus.OVERDUE)
+      .forEach(p => list.push({
+        tone: 'rose', kind: 'payment', to: '/financials',
+        text: `${p.tenantName} 的${typeLabel(p.type)} $${p.amount.toLocaleString()}（${p.dueDate}）已逾期`,
+      }));
+
+    // 2. 已過繳費日仍待繳
+    payments
+      .filter(p => p.status === PaymentStatus.PENDING && p.dueDate && p.dueDate < today)
+      .forEach(p => list.push({
+        tone: 'amber', kind: 'payment', to: '/financials',
+        text: `${p.tenantName} 的${typeLabel(p.type)} $${p.amount.toLocaleString()} 已過繳費日（${p.dueDate}）仍未入帳`,
+      }));
+
+    // 3. 合約到期（60 天內 / 已到期）
+    tenants.forEach(t => {
+      if (!t.leaseEndDate) return;
+      const days = Math.ceil((new Date(t.leaseEndDate).getTime() - new Date(today).getTime()) / 86400000);
+      if (days < 0) {
+        list.push({ tone: 'rose', kind: 'lease', to: '/contracts', text: `${t.name}（${t.roomNumber}）合約已於 ${t.leaseEndDate} 到期` });
+      } else if (days <= 60) {
+        list.push({ tone: 'amber', kind: 'lease', to: '/contracts', text: `${t.name}（${t.roomNumber}）合約將於 ${days} 天後到期（${t.leaseEndDate}）` });
+      }
+    });
+
+    // 4. 濾心到期
+    filters.forEach(f => {
+      if (f.status === 'Overdue') {
+        list.push({ tone: 'rose', kind: 'filter', to: '/maintenance', text: `濾心 ${f.model} 已過期（${f.nextDue}），請安排更換` });
+      } else if (f.status === 'Due Soon') {
+        list.push({ tone: 'amber', kind: 'filter', to: '/maintenance', text: `濾心 ${f.model} 即將到期（${f.nextDue}）` });
+      }
+    });
+
+    // 紅色（緊急）排前面
+    return list.sort((a, b) => (a.tone === 'rose' ? 0 : 1) - (b.tone === 'rose' ? 0 : 1));
+  }, [payments, tenants, filters]);
+
+  const reminderIcon = (kind: Reminder['kind']) =>
+    kind === 'payment' ? <Coins size={14} /> : kind === 'lease' ? <ScrollText size={14} /> : <Wrench size={14} />;
 
   const currentPayments = useMemo(
     () => payments.filter(p => new Date(p.dueDate).getFullYear() === year),
@@ -92,6 +151,35 @@ const Dashboard: React.FC<DashboardProps> = ({ payments, expenses }) => {
           <div className="font-serif text-base sm:text-[17px] text-ink leading-relaxed">{reminderText}</div>
         </div>
       </div>
+
+      {/* 到期提醒中心 */}
+      {reminders.length > 0 && (
+        <div className="bg-surface border border-line rounded-cozy p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 grid place-items-center">
+              <BellRing size={16} />
+            </div>
+            <span className="font-serif font-bold text-ink">到期提醒</span>
+            <span className="text-[11px] font-black text-white bg-rose-400 px-2 py-0.5 rounded-full">{reminders.length}</span>
+          </div>
+          <div className="space-y-1.5">
+            {reminders.map((r, i) => (
+              <Link
+                key={i}
+                to={r.to}
+                className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-[13px] font-medium transition hover:shadow-warm-sm
+                  ${r.tone === 'rose'
+                    ? 'bg-rose-50/60 border-rose-100 text-rose-700 hover:bg-rose-50'
+                    : 'bg-accent-soft/30 border-accent-soft text-amber-800 hover:bg-accent-soft/50'}`}
+              >
+                <span className={r.tone === 'rose' ? 'text-rose-500' : 'text-amber-600'}>{reminderIcon(r.kind)}</span>
+                <span className="flex-1 min-w-0">{r.text}</span>
+                <Chevron size={14} className="shrink-0 opacity-50" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

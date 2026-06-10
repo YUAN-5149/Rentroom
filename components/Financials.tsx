@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { PaymentRecord, PaymentStatus, Tenant } from '../types';
-import { FileSpreadsheet, Home, Trash2, AlertTriangle, Plus, X, Save, Calendar } from 'lucide-react';
+import { FileSpreadsheet, Home, Trash2, AlertTriangle, Plus, X, Save, Calendar, CalendarPlus, CheckCircle2 } from 'lucide-react';
 
 interface FinancialsProps {
   payments: PaymentRecord[];
@@ -27,6 +27,40 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
   });
 
   const filteredPayments = payments.filter(p => filter === 'ALL' || p.status === filter);
+
+  // --- 產生本月租金帳單 ---
+  const [isGenModalOpen, setIsGenModalOpen] = useState(false);
+  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const monthLabel = `${Number(currentMonth.slice(5, 7))} 月`;
+
+  // 預覽：哪些租客本月尚未有租金帳單（將建立）、哪些已有（跳過）
+  const genPreview = useMemo(() => {
+    const toBill: Tenant[] = [];
+    const billed: Tenant[] = [];
+    tenants.forEach(t => {
+      const hasBill = payments.some(p =>
+        p.tenantId === t.id && p.type === 'Rent' && (p.dueDate || '').startsWith(currentMonth)
+      );
+      if (hasBill) billed.push(t);
+      else if (t.rentAmount > 0) toBill.push(t);
+    });
+    return { toBill, billed };
+  }, [tenants, payments, currentMonth]);
+
+  const handleGenerateRentBills = () => {
+    const now = Date.now();
+    const records: PaymentRecord[] = genPreview.toBill.map((t, i) => ({
+      id: `pay-r-${now}-${i}`,
+      tenantId: t.id,
+      tenantName: t.name,
+      amount: t.rentAmount,
+      dueDate: `${currentMonth}-01`,
+      status: PaymentStatus.PENDING,
+      type: 'Rent',
+    }));
+    if (records.length > 0) onAddPayments(records);
+    setIsGenModalOpen(false);
+  };
 
   const getTenantInfo = (tenantId: string) => {
     return tenants.find(t => t.id === tenantId) || { name: '未知租客', roomNumber: '未知' };
@@ -110,7 +144,13 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
             <option value={PaymentStatus.PENDING}>待繳</option>
             <option value={PaymentStatus.OVERDUE}>逾期</option>
           </select>
-          <button 
+          <button
+            onClick={() => setIsGenModalOpen(true)}
+            className="flex-grow xl:flex-grow-0 flex items-center justify-center gap-2 bg-leaf hover:bg-emerald-700 text-white px-4 py-2 rounded-md text-sm transition shadow-warm-sm whitespace-nowrap"
+          >
+            <CalendarPlus size={16} /> <span className="hidden sm:inline">產生{monthLabel}租金帳單</span><span className="sm:hidden">{monthLabel}帳單</span>
+          </button>
+          <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex-grow xl:flex-grow-0 flex items-center justify-center gap-2 bg-stone-800 hover:bg-ink text-white px-4 py-2 rounded-md text-sm transition shadow-warm-sm whitespace-nowrap"
           >
@@ -252,6 +292,53 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
             </table>
         </div>
       </div>
+
+      {/* Generate Monthly Rent Modal */}
+      {isGenModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+          <div className="bg-surface rounded-cozy shadow-warm-xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-line flex justify-between items-center bg-bg shrink-0">
+              <h3 className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+                <CalendarPlus size={18} className="text-leaf" /> 產生 {monthLabel} 租金帳單
+              </h3>
+              <button onClick={() => setIsGenModalOpen(false)} className="text-ink-mute hover:text-ink-soft"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              {genPreview.toBill.length > 0 ? (
+                <div>
+                  <p className="text-xs font-bold text-ink-soft mb-2">將建立以下待繳帳單（繳費日 {currentMonth}-01）：</p>
+                  <div className="space-y-2">
+                    {genPreview.toBill.map(t => (
+                      <div key={t.id} className="flex justify-between items-center p-2.5 bg-bg rounded-lg border border-line text-sm">
+                        <span className="font-bold text-ink">{t.name} <span className="text-xs text-ink-mute font-medium">({t.roomNumber})</span></span>
+                        <span className="font-black text-ink">${t.rentAmount.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-ink-soft text-center py-4">所有租客本月都已有租金帳單 🎉</p>
+              )}
+              {genPreview.billed.length > 0 && (
+                <p className="text-[11px] text-ink-mute flex items-start gap-1.5">
+                  <CheckCircle2 size={13} className="text-leaf shrink-0 mt-0.5" />
+                  已跳過（本月已有帳單）：{genPreview.billed.map(t => t.name).join('、')}
+                </p>
+              )}
+              <div className="pt-2 flex gap-3">
+                <button onClick={() => setIsGenModalOpen(false)} className="flex-1 bg-surface-warm py-2.5 rounded-lg text-sm font-bold text-ink-soft">取消</button>
+                <button
+                  onClick={handleGenerateRentBills}
+                  disabled={genPreview.toBill.length === 0}
+                  className="flex-1 bg-leaf py-2.5 rounded-lg text-sm font-bold text-white flex items-center justify-center gap-2 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                >
+                  <Save size={16} /> 確認建立 {genPreview.toBill.length} 筆
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Payment Modal */}
       {isAddModalOpen && (
