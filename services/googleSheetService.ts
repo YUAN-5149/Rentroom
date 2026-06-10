@@ -136,11 +136,20 @@ const MAINTENANCE_CAT_TO_EN: Record<string, any> = {
 
 // --- Helper for Robust Post ---
 const sendPost = async (url: string, payload: any) => {
-    return fetch(url, { 
-        method: 'POST', 
+    return fetch(url, {
+        method: 'POST',
         body: JSON.stringify(payload),
         headers: { "Content-Type": "text/plain;charset=utf-8" }
     });
+};
+
+/** 電話號碼正規化：Google Sheet 會把純數字儲存格的開頭 0 吃掉，
+ *  台灣電話一律 0 開頭，讀回時若為純數字且非 0 開頭則補回 0 */
+const normalizePhone = (raw: any): string => {
+    if (raw === undefined || raw === null) return '';
+    let s = String(raw).trim();
+    if (/^\d+$/.test(s) && s.length > 0 && !s.startsWith('0')) s = '0' + s;
+    return s;
 };
 
 // --- Tenants Sync ---
@@ -166,7 +175,7 @@ export const fetchTenantsFromSheet = async (): Promise<Tenant[] | null> => {
             id: row.id || `t-${Math.random()}`,
             name: row.name || '',
             roomNumber: row.roomNumber || '',
-            phone: row.phone || '',
+            phone: normalizePhone(row.phone),
             email: row.email || '', 
             moveInDate: row.moveInDate || '',
             leaseEndDate: row.leaseEndDate || '',
