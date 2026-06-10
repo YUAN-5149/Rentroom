@@ -36,7 +36,7 @@ export const GOOGLE_SCRIPT_METERS_URL = "https://script.google.com/macros/s/AKfy
 // 設定 7: 合約管理 Sheet (Contracts)
 // 部署方式見 apps-script/contracts.gs，部署後將 /exec 網址填入下方
 // ============================================================================
-export const GOOGLE_SCRIPT_CONTRACTS_URL = "";
+export const GOOGLE_SCRIPT_CONTRACTS_URL = "https://script.google.com/macros/s/AKfycbxAtJ_JB4h-8KOLwTulfKV9pLJ812Zn2ns9J0x60IKvK5DP-oES1vqRNlemmysPNyzuOw/exec";
 
 
 /** 類別中英轉換 (費用) */
