@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Tenant } from '../types';
-import { X, Printer, CheckCircle2, ScrollText } from 'lucide-react';
+import { X, Printer, CheckCircle2, ScrollText, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { GOOGLE_SCRIPT_CONTRACTS_URL, syncContractToSheet, fetchContractFromSheet } from '../services/googleSheetService';
 
 /**
  * 住宅租賃契約書（內政部 113 年 7 月 8 日修正範本）
@@ -58,26 +59,77 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
     };
   };
 
-  const [fields, setFields] = useState<Record<string, any>>(() => {
+  // 本機儲存格式：{ updatedAt, fields }；相容舊格式（直接存 fields 物件）
+  const loadLocal = (): { updatedAt: string; fields: Record<string, any> } | null => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-    } catch { /* ignore corrupt data */ }
-    return buildDefaults();
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && parsed.fields) {
+        return { updatedAt: parsed.updatedAt || '', fields: parsed.fields };
+      }
+      return { updatedAt: '', fields: parsed }; // 舊格式
+    } catch { return null; }
+  };
+
+  const [fields, setFields] = useState<Record<string, any>>(() => {
+    const local = loadLocal();
+    return local ? local.fields : buildDefaults();
   });
   const [savedAt, setSavedAt] = useState<string>('');
+  const [cloudStatus, setCloudStatus] = useState<'off' | 'idle' | 'syncing' | 'synced' | 'error'>(
+    GOOGLE_SCRIPT_CONTRACTS_URL ? 'idle' : 'off'
+  );
   const firstRender = useRef(true);
+  const skipCloudPush = useRef(false);
 
-  // 自動儲存（防抖 400ms）
+  // 開啟時讀取雲端版本：若雲端較新（ISO 時間字串可直接比較），以雲端為準
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cloud = await fetchContractFromSheet(tenant.id);
+      if (cancelled || !cloud || !cloud.data) return;
+      const local = loadLocal();
+      if (cloud.updatedAt && cloud.updatedAt > (local?.updatedAt || '')) {
+        try {
+          const cloudFields = JSON.parse(cloud.data);
+          if (cloudFields && typeof cloudFields === 'object') {
+            skipCloudPush.current = true;
+            setFields(cloudFields);
+            localStorage.setItem(storageKey, JSON.stringify({ updatedAt: cloud.updatedAt, fields: cloudFields }));
+            setCloudStatus('synced');
+          }
+        } catch { /* ignore malformed cloud data */ }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 自動儲存：本機 400ms 防抖；雲端 2 秒防抖（避免逐字打字狂打 API）
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
-    const timer = setTimeout(() => {
+    if (skipCloudPush.current) { skipCloudPush.current = false; return; }
+    const now = new Date().toISOString();
+    const localTimer = setTimeout(() => {
       try {
-        localStorage.setItem(storageKey, JSON.stringify(fields));
+        localStorage.setItem(storageKey, JSON.stringify({ updatedAt: now, fields }));
         setSavedAt(new Date().toLocaleTimeString('zh-TW', { hour12: false }));
       } catch { /* storage full */ }
     }, 400);
-    return () => clearTimeout(timer);
+    const cloudTimer = setTimeout(async () => {
+      if (!GOOGLE_SCRIPT_CONTRACTS_URL) return;
+      setCloudStatus('syncing');
+      const ok = await syncContractToSheet({
+        tenantId: tenant.id,
+        tenantName: tenant.name,
+        updatedAt: now,
+        data: JSON.stringify(fields),
+      });
+      setCloudStatus(ok ? 'synced' : 'error');
+    }, 2000);
+    return () => { clearTimeout(localTimer); clearTimeout(cloudTimer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields, storageKey]);
 
   const set = (k: string, v: any) => setFields(prev => ({ ...prev, [k]: v }));
@@ -131,6 +183,26 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
             {savedAt && (
               <span className="hidden sm:flex items-center gap-1 text-[10px] text-leaf font-bold">
                 <CheckCircle2 size={12} /> 已儲存 {savedAt}
+              </span>
+            )}
+            {cloudStatus === 'off' && (
+              <span className="hidden sm:flex items-center gap-1 text-[10px] text-ink-mute font-bold" title="尚未設定合約雲端同步">
+                <CloudOff size={12} /> 僅本機
+              </span>
+            )}
+            {cloudStatus === 'syncing' && (
+              <span className="flex items-center gap-1 text-[10px] text-sky-600 font-bold">
+                <RefreshCw size={12} className="animate-spin" /> 同步中
+              </span>
+            )}
+            {cloudStatus === 'synced' && (
+              <span className="flex items-center gap-1 text-[10px] text-leaf font-bold">
+                <Cloud size={12} /> 已同步雲端
+              </span>
+            )}
+            {cloudStatus === 'error' && (
+              <span className="flex items-center gap-1 text-[10px] text-rose-500 font-bold" title="稍後修改任一欄位會自動重試">
+                <CloudOff size={12} /> 雲端同步失敗
               </span>
             )}
             <button

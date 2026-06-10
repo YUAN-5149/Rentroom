@@ -28,9 +28,15 @@ export const GOOGLE_SCRIPT_MAINTENANCE_URL = "https://script.google.com/macros/s
 export const GOOGLE_SCRIPT_FILTER_URL = "https://script.google.com/macros/s/AKfycbzD48CCREG2Y6o5a1ET74o2Wt56CBftpbaSFex3m2xv3ymXNcoykfWwMeAkpp_NTc8Y/exec"; 
 
 // ============================================================================
-// 設定 6: 電表管理 Sheet 
+// 設定 6: 電表管理 Sheet
 // ============================================================================
-export const GOOGLE_SCRIPT_METERS_URL = "https://script.google.com/macros/s/AKfycbwBqUhDImQQN1sIdSTv0rfXzUTJxvp9-9ya1dOQgHq8aIpNMofCR2a6JI1_gS4jqeNmLw/exec"; 
+export const GOOGLE_SCRIPT_METERS_URL = "https://script.google.com/macros/s/AKfycbwBqUhDImQQN1sIdSTv0rfXzUTJxvp9-9ya1dOQgHq8aIpNMofCR2a6JI1_gS4jqeNmLw/exec";
+
+// ============================================================================
+// 設定 7: 合約管理 Sheet (Contracts)
+// 部署方式見 apps-script/contracts.gs，部署後將 /exec 網址填入下方
+// ============================================================================
+export const GOOGLE_SCRIPT_CONTRACTS_URL = "https://script.google.com/macros/s/AKfycbxAtJ_JB4h-8KOLwTulfKV9pLJ812Zn2ns9J0x60IKvK5DP-oES1vqRNlemmysPNyzuOw/exec";
 
 
 /** 類別中英轉換 (費用) */
@@ -318,6 +324,49 @@ export const syncMeterToSheet = async (action: 'CREATE' | 'DELETE', reading: Par
     const payload = { action, data: reading };
     await sendPost(GOOGLE_SCRIPT_METERS_URL, payload);
   } catch (error) { console.error("Meter Sync Error", error); }
+};
+
+// --- Contracts Sync（合約填寫內容，每位租客一列，data 欄存 JSON 字串） ---
+export interface ContractRecord {
+  tenantId: string;
+  tenantName: string;
+  updatedAt: string; // ISO datetime，用於本機/雲端比新舊
+  data: string;      // 合約欄位 JSON 字串
+}
+
+export const syncContractToSheet = async (record: ContractRecord): Promise<boolean> => {
+  if (!GOOGLE_SCRIPT_CONTRACTS_URL) return false;
+  try {
+    const res = await sendPost(GOOGLE_SCRIPT_CONTRACTS_URL, { action: 'UPDATE', data: record });
+    return res.ok;
+  } catch (e) {
+    console.error('Contract Sync Error', e);
+    return false;
+  }
+};
+
+export const fetchContractFromSheet = async (tenantId: string): Promise<ContractRecord | null> => {
+  if (!GOOGLE_SCRIPT_CONTRACTS_URL) return null;
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_CONTRACTS_URL);
+    const json = await res.json();
+    const rows = Array.isArray(json) ? json : (json.data || []);
+    // 欄位名稱統一轉小寫，容忍 Sheet 標題列大小寫差異
+    const hit = rows
+      .map((raw: any) => {
+        const row: Record<string, any> = {};
+        Object.keys(raw || {}).forEach(k => { row[k.toLowerCase()] = raw[k]; });
+        return row;
+      })
+      .find((r: any) => String(r.tenantid) === String(tenantId));
+    if (!hit) return null;
+    return {
+      tenantId: String(hit.tenantid),
+      tenantName: hit.tenantname || '',
+      updatedAt: hit.updatedat || '',
+      data: hit.data || ''
+    };
+  } catch (e) { return null; }
 };
 
 export const fetchMetersFromSheet = async (): Promise<MeterReading[] | null> => {
