@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Tenant, PaymentRecord, PaymentStatus } from '../types';
 import { FileText, Edit, Plus, Trash2, User, Save, X, ChevronRight, Search, Users, Zap, DollarSign, Clock, Printer, ScrollText, Home, FileSpreadsheet, Fingerprint } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import ContractEditor from './ContractEditor';
 
 interface ContractsProps {
   tenants: Tenant[];
@@ -19,6 +20,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
   const [genRent, setGenRent] = useState(true);
   const [genDeposit, setGenDeposit] = useState(true);
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
+  const [isContractOpen, setIsContractOpen] = useState(false);
   
   const initialFormState: Tenant = {
     id: '', name: '', roomNumber: '', phone: '', email: '', moveInDate: new Date().toISOString().split('T')[0],
@@ -92,53 +94,9 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
     XLSX.writeFile(wb, "Tenant_List.xlsx");
   };
 
-  const renderContractText = (data: Tenant) => {
-    const name = data.name || '________';
-    const idNumber = data.idNumber || '________________';
-    const room = data.roomNumber || '____';
-    const rent = data.rentAmount ? data.rentAmount.toLocaleString() : '________';
-    const deposit = data.deposit ? data.deposit.toLocaleString() : '________';
-    const startDate = data.moveInDate || '    年    月    日';
-    const endDate = data.leaseEndDate || '    年    月    日';
-
-    return `住宅租賃契約書 (內政部範本參考)
-
-第一條：租賃標的
-    房屋所在地：本物業 ${room} 室。
-    
-第二條：租賃期間
-    自 ${startDate} 起至 ${endDate} 止。
-
-第三條：租金約定及支付
-    每月租金為新臺幣 ${rent} 元整。
-    承租人應於每月____日前支付租金，不得藉詞拖延。
-
-第四條：押金約定及返還
-    押金為新臺幣 ${deposit} 元整（最高不得超過二個月租金之總額）。
-    承租人於租賃期滿交還房屋並扣除欠稅費後，由出租人無息返還。
-
-第五條：當事人資訊
-    承租人：${name}
-    身分證字號：${idNumber}
-    聯絡電話：${data.phone || '________________'}
-
-第六條：特別約定事項
-    ${data.contractContent || '（無特別約定事項）'}
-
-第七條：返還義務
-    租賃期滿，承租人應將租賃物遷空交還出租人。
-
---- 出租人（簽章）：________________    承租人（簽章）：________________`;
-  };
-  
-  const downloadContract = () => {
-     if (!selectedTenant) return;
-     const element = document.createElement("a");
-     const file = new Blob([renderContractText(selectedTenant)], {type: 'text/plain'});
-     element.href = URL.createObjectURL(file);
-     element.download = `Contract_${selectedTenant.name}.txt`;
-     document.body.appendChild(element);
-     element.click();
+  // 是否已開始填寫官方契約（依租客各自儲存於本機）
+  const hasContractDraft = (tenantId: string): boolean => {
+    try { return localStorage.getItem(`sl_contract_form_${tenantId}`) !== null; } catch { return false; }
   };
 
   return (
@@ -330,19 +288,47 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
                             </div>
                         </div>
 
-                        {/* Contract Preview */}
+                        {/* Contract Card（內政部 113 年版範本）*/}
                         <div className="bg-bg rounded-cozy border border-line p-6 shadow-inner flex flex-col">
                              <div className="flex justify-between items-center mb-4">
                                 <h4 className="text-sm font-bold text-ink flex items-center gap-2">
-                                    <FileText size={16} className="text-accent" /> 租賃合約預覽
+                                    <FileText size={16} className="text-accent" /> 住宅租賃契約書
                                 </h4>
-                                <button onClick={downloadContract} className="text-xs bg-surface border border-line px-3 py-1.5 rounded hover:bg-surface-warm text-ink-soft font-bold flex items-center gap-1 transition">
-                                    <Printer size={12} /> 下載合約
-                                </button>
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${hasContractDraft(selectedTenant.id) ? 'bg-leaf-soft/60 text-leaf' : 'bg-surface-warm text-ink-mute'}`}>
+                                    {hasContractDraft(selectedTenant.id) ? '已建立填寫紀錄' : '尚未填寫'}
+                                </span>
                              </div>
-                             <div className="flex-1 bg-surface border border-line rounded p-4 text-[10px] text-ink-soft font-mono leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-[400px]">
-                                {renderContractText(selectedTenant)}
+
+                             <div className="bg-surface border border-line rounded-lg p-4 mb-4">
+                                <p className="text-xs text-ink-soft leading-6">
+                                    依<b className="text-ink">內政部 113 年 7 月 8 日修正「住宅租賃契約書範本」</b>製作，
+                                    含契約審閱權、全部 23 條條文、立契約書人欄位及附件一「租賃標的現況確認書」。
+                                </p>
+                                <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                                    <div className="p-2 bg-bg rounded">
+                                        <p className="text-[10px] text-ink-mute">租期</p>
+                                        <p className="text-[11px] font-bold text-ink mt-0.5">{selectedTenant.moveInDate}<br/>~ {selectedTenant.leaseEndDate || '未定'}</p>
+                                    </div>
+                                    <div className="p-2 bg-bg rounded">
+                                        <p className="text-[10px] text-ink-mute">每月租金</p>
+                                        <p className="text-sm font-black text-ink mt-0.5">${selectedTenant.rentAmount.toLocaleString()}</p>
+                                    </div>
+                                    <div className="p-2 bg-bg rounded">
+                                        <p className="text-[10px] text-ink-mute">押金</p>
+                                        <p className="text-sm font-black text-ink mt-0.5">${selectedTenant.deposit.toLocaleString()}</p>
+                                    </div>
+                                </div>
                              </div>
+
+                             <button
+                                onClick={() => setIsContractOpen(true)}
+                                className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-amber-700 text-white px-4 py-3 rounded-lg text-sm font-bold transition shadow-warm-sm"
+                             >
+                                <Edit size={16} /> {hasContractDraft(selectedTenant.id) ? '繼續填寫 / 檢視合約' : '開始填寫合約'}
+                             </button>
+                             <p className="text-[10px] text-ink-mute text-center mt-2 flex items-center justify-center gap-1">
+                                <Printer size={10} /> 開啟後可逐欄填寫、自動帶入租客資料，並可列印或另存 PDF 留存
+                             </p>
                         </div>
                     </div>
                 </div>
@@ -360,6 +346,11 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
           )}
         </div>
       </div>
+
+      {/* 官方契約填寫視窗 */}
+      {isContractOpen && selectedTenant && (
+        <ContractEditor tenant={selectedTenant} onClose={() => setIsContractOpen(false)} />
+      )}
     </div>
   );
 };
