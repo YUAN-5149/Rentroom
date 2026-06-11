@@ -467,12 +467,13 @@ const App: React.FC = () => {
                  />
               } />
               <Route path="/contracts" element={
-                <Contracts 
-                  tenants={tenants} 
-                  payments={payments} 
-                  onAddTenant={handleAddTenant} 
-                  onUpdateTenant={handleUpdateTenant} 
-                  onDeleteTenant={handleDeleteTenant} 
+                <Contracts
+                  tenants={tenants}
+                  payments={payments}
+                  tickets={tickets}
+                  onAddTenant={handleAddTenant}
+                  onUpdateTenant={handleUpdateTenant}
+                  onDeleteTenant={handleDeleteTenant}
                 />
               } />
               <Route path="/room-condition" element={

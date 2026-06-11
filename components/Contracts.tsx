@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Tenant, PaymentRecord, PaymentStatus } from '../types';
-import { FileText, Edit, Plus, Trash2, User, Save, X, ChevronRight, Search, Users, Zap, DollarSign, Clock, Printer, ScrollText, Home, FileSpreadsheet, Fingerprint, RefreshCw, History } from 'lucide-react';
+import { Tenant, PaymentRecord, PaymentStatus, MaintenanceTicket } from '../types';
+import { FileText, Edit, Plus, Trash2, User, Save, X, ChevronRight, Search, Users, Zap, DollarSign, Clock, Printer, ScrollText, Home, FileSpreadsheet, Fingerprint, RefreshCw, History, Scale } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ContractEditor from './ContractEditor';
+import DepositSettlementModal from './DepositSettlementModal';
 
 interface ContractsProps {
   tenants: Tenant[];
   payments: PaymentRecord[];
+  tickets: MaintenanceTicket[];
   onAddTenant: (tenant: Tenant, options?: { genRent: boolean, genDeposit: boolean }) => void;
   onUpdateTenant: (tenant: Tenant) => void;
   onDeleteTenant: (id: string) => void;
 }
 
-const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, onUpdateTenant, onDeleteTenant }) => {
+const Contracts: React.FC<ContractsProps> = ({ tenants, payments, tickets, onAddTenant, onUpdateTenant, onDeleteTenant }) => {
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [mode, setMode] = useState<'VIEW' | 'EDIT_INFO' | 'ADD'>('VIEW');
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,6 +106,7 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [renewForm, setRenewForm] = useState({ start: '', end: '', rent: 0 });
   const [viewArchiveKey, setViewArchiveKey] = useState<string | null>(null);
+  const [isSettleOpen, setIsSettleOpen] = useState(false);
 
   const getArchives = (tenantId: string): ArchiveEntry[] => {
     try { return JSON.parse(localStorage.getItem(`sl_contract_archives_${tenantId}`) || '[]'); } catch { return []; }
@@ -304,6 +307,13 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
                         >
                             <RefreshCw size={13} /> 續約
                         </button>
+                        <button
+                            onClick={() => setIsSettleOpen(true)}
+                            className="flex items-center gap-1.5 text-xs bg-surface border border-line hover:border-accent hover:text-accent text-ink-soft px-3 py-2 rounded-lg font-bold transition shadow-warm-sm whitespace-nowrap"
+                            title="退租押金結算"
+                        >
+                            <Scale size={13} /> 押金結算
+                        </button>
                         <button onClick={() => setMode('EDIT_INFO')} className="p-2 text-ink-mute hover:text-accent hover:bg-accent-soft/40 rounded-full transition" title="編輯"><Edit size={18} /></button>
                         <button onClick={() => { if(window.confirm('確定刪除?')) { onDeleteTenant(selectedTenant.id); setSelectedTenantId(null); } }} className="p-2 text-ink-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition" title="刪除"><Trash2 size={18} /></button>
                     </div>
@@ -429,6 +439,16 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
       {/* 歷史合約檢視（唯讀） */}
       {viewArchiveKey && selectedTenant && (
         <ContractEditor tenant={selectedTenant} archiveKey={viewArchiveKey} onClose={() => setViewArchiveKey(null)} />
+      )}
+
+      {/* 押金結算單 */}
+      {isSettleOpen && selectedTenant && (
+        <DepositSettlementModal
+          tenant={selectedTenant}
+          payments={payments}
+          tickets={tickets}
+          onClose={() => setIsSettleOpen(false)}
+        />
       )}
 
       {/* 續約視窗 */}

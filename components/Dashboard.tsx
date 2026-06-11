@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { PaymentRecord, PaymentStatus, ExpenseRecord, Tenant, FilterSchedule } from '../types';
 import { TrendingUp, TrendingDown, AlertCircle, LayoutGrid, Wallet, Scale, ChevronLeft, ChevronRight, Sparkles, Leaf, BellRing, ChevronRight as Chevron, Wrench, ScrollText, Coins, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import BackupRestore from './BackupRestore';
 
 interface DashboardProps {
   payments: PaymentRecord[];
@@ -341,6 +342,9 @@ const Dashboard: React.FC<DashboardProps> = ({ payments, expenses, tenants, filt
           <p className="font-hand text-base text-ink-mute mt-4">~ start with care ~</p>
         </div>
       )}
+
+      {/* 資料備份 / 還原 */}
+      <BackupRestore />
     </div>
   );
 };
