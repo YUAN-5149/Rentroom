@@ -17,6 +17,9 @@
 
 const SHEET_NAME = 'Contracts';
 
+// 合約 Google 文件存放的 Drive 資料夾 ID
+const DOC_FOLDER_ID = '1VcmtBhL_DXZPZWWgdHViIBKs5sDHaK_y';
+
 function getSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
@@ -52,6 +55,17 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
     const action = payload.action;
     const data = payload.data || {};
+
+    // 建立合約 Google 文件（存到指定 Drive 資料夾，回傳文件網址）
+    if (action === 'CREATE_DOC') {
+      const doc = DocumentApp.create(data.fileName || '住宅租賃契約');
+      doc.getBody().setText(data.content || '');
+      doc.saveAndClose();
+      const file = DriveApp.getFileById(doc.getId());
+      file.moveTo(DriveApp.getFolderById(DOC_FOLDER_ID));
+      return jsonOut({ status: 'success', url: doc.getUrl() });
+    }
+
     if (!data.tenantId) return jsonOut({ status: 'error', message: 'tenantId required' });
 
     const sheet = getSheet();

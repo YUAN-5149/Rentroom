@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Tenant } from '../types';
-import { X, Printer, CheckCircle2, ScrollText, Cloud, CloudOff, RefreshCw } from 'lucide-react';
-import { GOOGLE_SCRIPT_CONTRACTS_URL, syncContractToSheet, fetchContractFromSheet } from '../services/googleSheetService';
+import { X, Printer, CheckCircle2, ScrollText, Cloud, CloudOff, RefreshCw, FileUp, ExternalLink } from 'lucide-react';
+import { GOOGLE_SCRIPT_CONTRACTS_URL, syncContractToSheet, fetchContractFromSheet, createContractDoc } from '../services/googleSheetService';
+import { buildContractText } from './contractText';
 
 /**
  * 住宅租賃契約書（內政部 113 年 7 月 8 日修正範本）
@@ -85,6 +86,20 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose, archiv
   );
   const firstRender = useRef(true);
   const skipCloudPush = useRef(false);
+
+  // --- 存雲端文件（建立 Google 文件到 Drive 資料夾）---
+  const [docStatus, setDocStatus] = useState<'idle' | 'creating' | 'done' | 'error'>('idle');
+  const [docUrl, setDocUrl] = useState<string | null>(null);
+
+  const handleCreateDoc = async () => {
+    if (docStatus === 'creating') return;
+    setDocStatus('creating');
+    const content = buildContractText(fields, tenant);
+    const fileName = `住宅租賃契約_${tenant.name}_${new Date().toISOString().slice(0, 10)}`;
+    const url = await createContractDoc(fileName, content);
+    if (url) { setDocUrl(url); setDocStatus('done'); }
+    else setDocStatus('error');
+  };
 
   // 開啟時讀取雲端版本：若雲端較新（ISO 時間字串可直接比較），以雲端為準
   useEffect(() => {
@@ -212,6 +227,30 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose, archiv
               <span className="flex items-center gap-1 text-[10px] text-rose-500 font-bold" title="稍後修改任一欄位會自動重試">
                 <CloudOff size={12} /> 雲端同步失敗
               </span>
+            )}
+            {docStatus === 'done' && docUrl ? (
+              <a
+                href={docUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs bg-leaf text-white px-3 py-2 rounded-lg font-bold hover:bg-emerald-700 transition shadow-warm-sm"
+                title="開啟剛建立的 Google 文件"
+              >
+                <ExternalLink size={14} /> 開啟文件
+              </a>
+            ) : (
+              <button
+                onClick={handleCreateDoc}
+                disabled={docStatus === 'creating'}
+                className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-bold transition shadow-warm-sm ${docStatus === 'error' ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-surface border border-line text-ink-soft hover:border-accent hover:text-accent'} disabled:opacity-60`}
+                title="將填寫內容建立為 Google 文件，存到雲端硬碟資料夾"
+              >
+                {docStatus === 'creating'
+                  ? (<><RefreshCw size={14} className="animate-spin" /> 建立中</>)
+                  : docStatus === 'error'
+                  ? (<><FileUp size={14} /> 失敗，重試</>)
+                  : (<><FileUp size={14} /> 存雲端文件</>)}
+              </button>
             )}
             <button
               onClick={() => window.print()}

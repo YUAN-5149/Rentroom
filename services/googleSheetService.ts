@@ -354,6 +354,19 @@ export const syncContractToSheet = async (record: ContractRecord): Promise<boole
   }
 };
 
+/** 將填寫完成的合約建立為 Google 文件（存到指定 Drive 資料夾），回傳文件網址 */
+export const createContractDoc = async (fileName: string, content: string): Promise<string | null> => {
+  if (!GOOGLE_SCRIPT_CONTRACTS_URL) return null;
+  try {
+    const res = await sendPost(GOOGLE_SCRIPT_CONTRACTS_URL, { action: 'CREATE_DOC', data: { fileName, content } });
+    const json = await res.json();
+    return json && json.status === 'success' && json.url ? String(json.url) : null;
+  } catch (e) {
+    console.error('Create Contract Doc Error', e);
+    return null;
+  }
+};
+
 export const fetchContractFromSheet = async (tenantId: string): Promise<ContractRecord | null> => {
   if (!GOOGLE_SCRIPT_CONTRACTS_URL) return null;
   try {
