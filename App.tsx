@@ -440,7 +440,7 @@ const App: React.FC = () => {
           </header>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
             <Routes>
-              <Route path="/" element={<Dashboard payments={payments} expenses={expenses} />} />
+              <Route path="/" element={<Dashboard payments={payments} expenses={expenses} tenants={tenants} filters={filters} />} />
               <Route path="/financials" element={
                 <Financials 
                   payments={payments} 
@@ -458,10 +458,12 @@ const App: React.FC = () => {
                  />
               } />
               <Route path="/meters" element={
-                 <Meters 
+                 <Meters
                     readings={meterReadings}
+                    tenants={tenants}
                     onAddReading={handleAddReading}
                     onDeleteReading={handleDeleteReading}
+                    onAddPayments={handleAddPayments}
                  />
               } />
               <Route path="/contracts" element={

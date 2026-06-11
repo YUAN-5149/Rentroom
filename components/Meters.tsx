@@ -1,13 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
-import { MeterReading, RoomId } from '../types';
-import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle, Home, BarChart3, TrendingUp } from 'lucide-react';
+import { MeterReading, RoomId, Tenant, PaymentRecord, PaymentStatus } from '../types';
+import { Zap, Plus, Trash2, Save, X, Search, ArrowRight, History, AlertTriangle, Home, BarChart3, TrendingUp, Receipt, CheckCircle2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface MetersProps {
   readings: MeterReading[];
+  tenants: Tenant[];
   onAddReading: (reading: MeterReading) => void;
   onDeleteReading: (id: string) => void;
+  onAddPayments: (records: PaymentRecord[]) => void;
 }
 
 // 房間方塊定義（配色與「套房原狀」一致）
@@ -37,9 +39,45 @@ const inferRoomId = (meterName: string): RoomId | undefined => {
 const getRoomId = (r: MeterReading): RoomId | undefined =>
   r.roomId ?? inferRoomId(r.meterName);
 
-const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading }) => {
+const Meters: React.FC<MetersProps> = ({ readings, tenants, onAddReading, onDeleteReading, onAddPayments }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // --- 一鍵開水電帳單 ---
+  const [billTarget, setBillTarget] = useState<MeterReading | null>(null);
+  // 已開過帳單的抄表紀錄 id（避免重複開單），存本機
+  const [billedIds, setBilledIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('sl_meter_billed_v1') || '[]'); } catch { return []; }
+  });
+
+  // 由抄表紀錄的房號找對應租客（租客 roomNumber 如「第一間」同樣用 inferRoomId 解析）
+  const findTenantForReading = (r: MeterReading): Tenant | undefined => {
+    const rid = getRoomId(r);
+    if (!rid) return undefined;
+    return tenants.find(t => inferRoomId(t.roomNumber || '') === rid);
+  };
+
+  const confirmCreateBill = () => {
+    if (!billTarget) return;
+    const tenant = findTenantForReading(billTarget);
+    if (!tenant) return;
+    const record: PaymentRecord = {
+      id: `pay-u-${Date.now()}`,
+      tenantId: tenant.id,
+      tenantName: tenant.name,
+      amount: billTarget.totalCost,
+      dueDate: new Date().toISOString().split('T')[0],
+      status: PaymentStatus.PENDING,
+      type: 'Utility',
+    };
+    onAddPayments([record]);
+    setBilledIds(prev => {
+      const next = [...prev, billTarget.id];
+      try { localStorage.setItem('sl_meter_billed_v1', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+    setBillTarget(null);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   // 'all' = 全部、'1'~'4' = 該間、'unassigned' = 未分類
   const [selectedTab, setSelectedTab] = useState<'all' | RoomId | 'unassigned'>('all');
@@ -499,6 +537,20 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
               </div>
             </div>
             {reading.note && <p className="text-xs text-ink-mute mt-2 italic">{reading.note}</p>}
+            {billedIds.includes(reading.id) ? (
+              <div className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs text-leaf font-bold py-2 bg-leaf-soft/40 rounded-md">
+                <CheckCircle2 size={13} /> 已開水電帳單
+              </div>
+            ) : (
+              <button
+                onClick={() => setBillTarget(reading)}
+                disabled={!findTenantForReading(reading)}
+                className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs bg-surface text-ink px-3 py-2 rounded-md border border-line hover:bg-accent hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                title={findTenantForReading(reading) ? '建立水電費帳單' : '找不到該房的租客'}
+              >
+                <Receipt size={13} /> 開水電帳單
+              </button>
+            )}
           </div>
           );
         })}
@@ -559,14 +611,31 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
                                 ${reading.totalCost.toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                <button
-                                    type="button"
-                                    onClick={() => setDeleteTargetId(reading.id)}
-                                    className="text-ink-mute hover:text-rose-500 transition p-2 rounded-full hover:bg-rose-50"
-                                    title="刪除紀錄"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                                <div className="flex justify-end items-center gap-2">
+                                    {billedIds.includes(reading.id) ? (
+                                        <span className="flex items-center gap-1 text-[11px] text-leaf font-bold bg-leaf-soft/40 px-2.5 py-1.5 rounded-md">
+                                            <CheckCircle2 size={12} /> 已開單
+                                        </span>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setBillTarget(reading)}
+                                            disabled={!findTenantForReading(reading)}
+                                            className="flex items-center gap-1 text-xs bg-surface text-ink px-2.5 py-1.5 rounded-md border border-line hover:bg-accent hover:text-white hover:border-accent transition-all font-bold shadow-warm-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                            title={findTenantForReading(reading) ? '建立水電費帳單' : '找不到該房的租客'}
+                                        >
+                                            <Receipt size={12} /> 開帳單
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeleteTargetId(reading.id)}
+                                        className="text-ink-mute hover:text-rose-500 transition p-2 rounded-full hover:bg-rose-50"
+                                        title="刪除紀錄"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         );
@@ -723,6 +792,35 @@ const Meters: React.FC<MetersProps> = ({ readings, onAddReading, onDeleteReading
             </div>
         </div>
       )}
+
+      {/* 開帳單確認視窗 */}
+      {billTarget && (() => {
+        const tenant = findTenantForReading(billTarget);
+        if (!tenant) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+            <div className="bg-surface rounded-cozy shadow-warm-xl max-w-sm w-full overflow-hidden">
+              <div className="p-6">
+                <div className="w-12 h-12 rounded-full bg-accent-soft flex items-center justify-center mb-4 mx-auto text-accent">
+                  <Receipt size={24} />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-ink mb-4 text-center">建立水電費帳單</h3>
+                <div className="space-y-2 text-sm bg-bg rounded-lg p-4 border border-line">
+                  <div className="flex justify-between"><span className="text-ink-soft">租客</span><span className="font-bold text-ink">{tenant.name}（{tenant.roomNumber}）</span></div>
+                  <div className="flex justify-between"><span className="text-ink-soft">電表</span><span className="font-bold text-ink">{billTarget.meterName}</span></div>
+                  <div className="flex justify-between"><span className="text-ink-soft">用電</span><span className="font-bold text-ink">{billTarget.usage} 度 × ${billTarget.ratePerKwh}/度</span></div>
+                  <div className="flex justify-between border-t border-line pt-2"><span className="text-ink-soft">帳單金額</span><span className="font-black text-accent text-lg">${billTarget.totalCost.toLocaleString()}</span></div>
+                </div>
+                <p className="text-[11px] text-ink-mute mt-3 text-center">將建立一筆「水電 / 待繳」帳單並同步至財務管理</p>
+              </div>
+              <div className="flex border-t border-line">
+                <button onClick={() => setBillTarget(null)} className="flex-1 px-6 py-4 text-ink-soft font-medium hover:bg-bg border-r border-line">取消</button>
+                <button onClick={confirmCreateBill} className="flex-1 px-6 py-4 text-accent font-bold hover:bg-accent-soft/30">確認建立</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 刪除確認視窗 */}
       {deleteTargetId && (
