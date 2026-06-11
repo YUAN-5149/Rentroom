@@ -3,7 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { PaymentRecord, PaymentStatus, ExpenseRecord, Tenant, FilterSchedule } from '../types';
-import { TrendingUp, TrendingDown, AlertCircle, LayoutGrid, Wallet, Scale, ChevronLeft, ChevronRight, Sparkles, Leaf, BellRing, ChevronRight as Chevron, Wrench, ScrollText, Coins } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, LayoutGrid, Wallet, Scale, ChevronLeft, ChevronRight, Sparkles, Leaf, BellRing, ChevronRight as Chevron, Wrench, ScrollText, Coins, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface DashboardProps {
   payments: PaymentRecord[];
@@ -107,6 +108,68 @@ const Dashboard: React.FC<DashboardProps> = ({ payments, expenses, tenants, filt
 
   const changeYear = (delta: number) => setYear(prev => prev + delta);
 
+  // === 年度收支報表匯出（報稅用）===
+  const exportAnnualReport = () => {
+    const roomOf = (tid: string) => tenants.find(t => t.id === tid)?.roomNumber || '—';
+    const payTypeLabel = (t: string) => t === 'Rent' ? '租金' : t === 'Utility' ? '水電' : t === 'Deposit' ? '押金' : '其他';
+    const expCatLabel: Record<string, string> = {
+      Water: '自來水費', Electricity: '電費', Gas: '瓦斯費', Internet: '網路費', Cleaning: '清潔費', Other: '雜支',
+    };
+
+    // 1. 年度總覽
+    const overview = [
+      { 項目: '已收收入', 金額: totalPaid },
+      { 項目: '待收款項', 金額: totalPending },
+      { 項目: '逾期款項', 金額: totalOverdue },
+      { 項目: '總支出', 金額: totalExpenses },
+      { 項目: '淨利潤（已收 − 支出）', 金額: netProfit },
+    ];
+
+    // 2. 每月彙總（已收收入 / 支出 / 淨額）
+    const monthly = Array.from({ length: 12 }, (_, i) => {
+      const mm = String(i + 1).padStart(2, '0');
+      const prefix = `${year}-${mm}`;
+      const income = currentPayments
+        .filter(p => p.status === PaymentStatus.PAID && (p.dueDate || '').startsWith(prefix))
+        .reduce((a, c) => a + c.amount, 0);
+      const expense = currentExpenses
+        .filter(e => (e.date || '').startsWith(prefix))
+        .reduce((a, c) => a + c.amount, 0);
+      return { 月份: `${i + 1}月`, 已收收入: income, 支出: expense, 淨額: income - expense };
+    });
+
+    // 3. 收入明細
+    const incomeRows = [...currentPayments]
+      .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+      .map(p => ({
+        繳費日: p.dueDate, 房號: roomOf(p.tenantId), 租客: p.tenantName,
+        類別: payTypeLabel(p.type), 金額: p.amount, 狀態: p.status,
+      }));
+
+    // 4. 支出明細
+    const expenseRows = [...currentExpenses]
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+      .map(e => ({ 日期: e.date, 類別: expCatLabel[e.category] || e.category, 金額: e.amount, 說明: e.description || '' }));
+
+    // 5. 各房彙總（申報租賃所得用）
+    const roomRows = tenants.map(t => {
+      const tp = currentPayments.filter(p => p.tenantId === t.id);
+      const sum = (st: PaymentStatus) => tp.filter(p => p.status === st).reduce((a, c) => a + c.amount, 0);
+      return {
+        房號: t.roomNumber, 租客: t.name, 每月租金: t.rentAmount,
+        年度已收: sum(PaymentStatus.PAID), 待收: sum(PaymentStatus.PENDING), 逾期: sum(PaymentStatus.OVERDUE),
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(overview), '年度總覽');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthly), '每月彙總');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(incomeRows), '收入明細');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expenseRows), '支出明細');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(roomRows), '各房彙總');
+    XLSX.writeFile(wb, `${year}_年度收支報表.xlsx`);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
       {/* Top bar */}
@@ -118,21 +181,30 @@ const Dashboard: React.FC<DashboardProps> = ({ payments, expenses, tenants, filt
           <h1 className="font-serif text-2xl sm:text-3xl text-ink font-bold tracking-wide">今天也辛苦了</h1>
         </div>
 
-        <div className="flex items-center bg-surface border border-line rounded-full px-1 py-1 shadow-warm-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-surface border border-line rounded-full px-1 py-1 shadow-warm-sm">
+            <button
+              onClick={() => changeYear(-1)}
+              className="p-1.5 hover:bg-surface-warm rounded-full text-ink-soft hover:text-ink transition"
+              title="上一年"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="px-3 text-sm font-semibold text-ink select-none min-w-[5rem] text-center">{year} 年度</span>
+            <button
+              onClick={() => changeYear(1)}
+              className="p-1.5 hover:bg-surface-warm rounded-full text-ink-soft hover:text-ink transition"
+              title="下一年"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
           <button
-            onClick={() => changeYear(-1)}
-            className="p-1.5 hover:bg-surface-warm rounded-full text-ink-soft hover:text-ink transition"
-            title="上一年"
+            onClick={exportAnnualReport}
+            className="flex items-center gap-1.5 text-xs bg-surface border border-line hover:bg-bg text-ink-soft hover:text-ink px-3 py-2.5 rounded-full font-bold transition shadow-warm-sm whitespace-nowrap"
+            title="匯出整年收入/支出/淨利 Excel，含各房明細"
           >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="px-3 text-sm font-semibold text-ink select-none min-w-[5rem] text-center">{year} 年度</span>
-          <button
-            onClick={() => changeYear(1)}
-            className="p-1.5 hover:bg-surface-warm rounded-full text-ink-soft hover:text-ink transition"
-            title="下一年"
-          >
-            <ChevronRight size={16} />
+            <FileSpreadsheet size={14} /> 年度報表
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tenant, PaymentRecord, PaymentStatus } from '../types';
-import { FileText, Edit, Plus, Trash2, User, Save, X, ChevronRight, Search, Users, Zap, DollarSign, Clock, Printer, ScrollText, Home, FileSpreadsheet, Fingerprint } from 'lucide-react';
+import { FileText, Edit, Plus, Trash2, User, Save, X, ChevronRight, Search, Users, Zap, DollarSign, Clock, Printer, ScrollText, Home, FileSpreadsheet, Fingerprint, RefreshCw, History } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ContractEditor from './ContractEditor';
 
@@ -97,6 +97,53 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
   // 是否已開始填寫官方契約（依租客各自儲存於本機）
   const hasContractDraft = (tenantId: string): boolean => {
     try { return localStorage.getItem(`sl_contract_form_${tenantId}`) !== null; } catch { return false; }
+  };
+
+  // --- 合約續約 ---
+  interface ArchiveEntry { key: string; archivedAt: string; label: string; }
+  const [isRenewOpen, setIsRenewOpen] = useState(false);
+  const [renewForm, setRenewForm] = useState({ start: '', end: '', rent: 0 });
+  const [viewArchiveKey, setViewArchiveKey] = useState<string | null>(null);
+
+  const getArchives = (tenantId: string): ArchiveEntry[] => {
+    try { return JSON.parse(localStorage.getItem(`sl_contract_archives_${tenantId}`) || '[]'); } catch { return []; }
+  };
+
+  const openRenewModal = (t: Tenant) => {
+    // 預設新租期：舊約到期日隔天起算一年
+    const base = t.leaseEndDate && t.leaseEndDate >= new Date().toISOString().slice(0, 10)
+      ? new Date(t.leaseEndDate) : new Date();
+    const start = new Date(base); start.setDate(start.getDate() + 1);
+    const end = new Date(start); end.setFullYear(end.getFullYear() + 1); end.setDate(end.getDate() - 1);
+    const iso = (d: Date) => d.toISOString().split('T')[0];
+    setRenewForm({ start: iso(start), end: iso(end), rent: t.rentAmount });
+    setIsRenewOpen(true);
+  };
+
+  const handleRenew = () => {
+    if (!selectedTenant || !renewForm.start || !renewForm.end) return;
+    const t = selectedTenant;
+    try {
+      // 1. 封存舊合約填寫紀錄（若有）
+      const formKey = `sl_contract_form_${t.id}`;
+      const current = localStorage.getItem(formKey);
+      if (current !== null) {
+        const archiveKey = `sl_contract_archive_${t.id}_${Date.now()}`;
+        localStorage.setItem(archiveKey, current);
+        const archives = getArchives(t.id);
+        archives.unshift({
+          key: archiveKey,
+          archivedAt: new Date().toISOString().slice(0, 10),
+          label: `${t.moveInDate} ~ ${t.leaseEndDate || '未定'}`,
+        });
+        localStorage.setItem(`sl_contract_archives_${t.id}`, JSON.stringify(archives));
+        localStorage.removeItem(formKey); // 新合約從乾淨狀態開始（自動帶入新租期）
+      }
+    } catch { /* storage error: 仍繼續更新租期 */ }
+
+    // 2. 更新租期與租金（同步至租客 Sheet）
+    onUpdateTenant({ ...t, moveInDate: renewForm.start, leaseEndDate: renewForm.end, rentAmount: renewForm.rent });
+    setIsRenewOpen(false);
   };
 
   return (
@@ -249,7 +296,14 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
                             <span className="flex items-center gap-1">租期: {selectedTenant.moveInDate} ~ {selectedTenant.leaseEndDate || '未定'}</span>
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                        <button
+                            onClick={() => openRenewModal(selectedTenant)}
+                            className="flex items-center gap-1.5 text-xs bg-leaf hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-bold transition shadow-warm-sm whitespace-nowrap"
+                            title="延長租期並封存舊合約"
+                        >
+                            <RefreshCw size={13} /> 續約
+                        </button>
                         <button onClick={() => setMode('EDIT_INFO')} className="p-2 text-ink-mute hover:text-accent hover:bg-accent-soft/40 rounded-full transition" title="編輯"><Edit size={18} /></button>
                         <button onClick={() => { if(window.confirm('確定刪除?')) { onDeleteTenant(selectedTenant.id); setSelectedTenantId(null); } }} className="p-2 text-ink-mute hover:text-rose-600 hover:bg-rose-50 rounded-full transition" title="刪除"><Trash2 size={18} /></button>
                     </div>
@@ -329,6 +383,26 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
                              <p className="text-[10px] text-ink-mute text-center mt-2 flex items-center justify-center gap-1">
                                 <Printer size={10} /> 開啟後可逐欄填寫、自動帶入租客資料，並可列印或另存 PDF 留存
                              </p>
+
+                             {/* 歷史合約（續約時封存） */}
+                             {getArchives(selectedTenant.id).length > 0 && (
+                                <div className="mt-4 pt-3 border-t border-dashed border-line">
+                                    <p className="text-[11px] font-bold text-ink-soft mb-2 flex items-center gap-1.5">
+                                        <History size={12} /> 歷史合約
+                                    </p>
+                                    <div className="space-y-1.5">
+                                        {getArchives(selectedTenant.id).map(a => (
+                                            <div key={a.key} className="flex justify-between items-center text-xs bg-surface rounded-lg border border-line px-3 py-2">
+                                                <span className="text-ink-soft">租期 <b className="text-ink">{a.label}</b><span className="text-ink-mute ml-2">（{a.archivedAt} 封存）</span></span>
+                                                <button
+                                                    onClick={() => setViewArchiveKey(a.key)}
+                                                    className="text-accent font-bold hover:underline whitespace-nowrap"
+                                                >檢視 / 列印</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                             )}
                         </div>
                     </div>
                 </div>
@@ -350,6 +424,59 @@ const Contracts: React.FC<ContractsProps> = ({ tenants, payments, onAddTenant, o
       {/* 官方契約填寫視窗 */}
       {isContractOpen && selectedTenant && (
         <ContractEditor tenant={selectedTenant} onClose={() => setIsContractOpen(false)} />
+      )}
+
+      {/* 歷史合約檢視（唯讀） */}
+      {viewArchiveKey && selectedTenant && (
+        <ContractEditor tenant={selectedTenant} archiveKey={viewArchiveKey} onClose={() => setViewArchiveKey(null)} />
+      )}
+
+      {/* 續約視窗 */}
+      {isRenewOpen && selectedTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+          <div className="bg-surface rounded-cozy shadow-warm-xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-line flex justify-between items-center bg-bg shrink-0">
+              <h3 className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+                <RefreshCw size={18} className="text-leaf" /> 合約續約 · {selectedTenant.name}
+              </h3>
+              <button onClick={() => setIsRenewOpen(false)} className="text-ink-mute hover:text-ink-soft"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div className="p-3 bg-bg rounded-lg border border-line text-xs text-ink-soft leading-6">
+                目前租期：<b className="text-ink">{selectedTenant.moveInDate} ~ {selectedTenant.leaseEndDate || '未定'}</b><br />
+                確認續約後：舊合約填寫紀錄將<b className="text-ink">自動封存</b>（可隨時檢視/列印），
+                租期與租金更新，並可重新填寫新合約。
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-ink-soft mb-1">新約起日</label>
+                  <input type="date" value={renewForm.start} onChange={e => setRenewForm({ ...renewForm, start: e.target.value })} className="w-full border border-line rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-ink-soft mb-1">新約迄日</label>
+                  <input type="date" value={renewForm.end} onChange={e => setRenewForm({ ...renewForm, end: e.target.value })} className="w-full border border-line rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-ink-soft mb-1">新約每月租金（可調整）</label>
+                <input type="number" value={renewForm.rent} onChange={e => setRenewForm({ ...renewForm, rent: Number(e.target.value) })} className="w-full border border-line rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent/20 outline-none" />
+                {renewForm.rent !== selectedTenant.rentAmount && (
+                  <p className="text-[11px] text-accent mt-1">租金將由 ${selectedTenant.rentAmount.toLocaleString()} 調整為 ${renewForm.rent.toLocaleString()}</p>
+                )}
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button onClick={() => setIsRenewOpen(false)} className="flex-1 bg-surface-warm py-2.5 rounded-lg text-sm font-bold text-ink-soft">取消</button>
+                <button
+                  onClick={handleRenew}
+                  disabled={!renewForm.start || !renewForm.end || renewForm.end <= renewForm.start}
+                  className="flex-1 bg-leaf py-2.5 rounded-lg text-sm font-bold text-white flex items-center justify-center gap-2 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                >
+                  <Save size={16} /> 確認續約
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

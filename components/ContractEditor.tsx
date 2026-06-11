@@ -11,6 +11,8 @@ import { GOOGLE_SCRIPT_CONTRACTS_URL, syncContractToSheet, fetchContractFromShee
 interface ContractEditorProps {
   tenant: Tenant;
   onClose: () => void;
+  /** 指定 localStorage key 以唯讀模式檢視歷史合約（不可編輯、不自動儲存、不同步雲端） */
+  archiveKey?: string;
 }
 
 // 西元 ISO 日期 → 民國年月日
@@ -35,8 +37,9 @@ const PRINT_CSS = `
 }
 `;
 
-const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
-  const storageKey = `sl_contract_form_${tenant.id}`;
+const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose, archiveKey }) => {
+  const readOnly = !!archiveKey;
+  const storageKey = archiveKey || `sl_contract_form_${tenant.id}`;
 
   const buildDefaults = (): Record<string, any> => {
     const s = rocDate(tenant.moveInDate);
@@ -85,6 +88,7 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
 
   // 開啟時讀取雲端版本：若雲端較新（ISO 時間字串可直接比較），以雲端為準
   useEffect(() => {
+    if (readOnly) return; // 歷史合約唯讀，不碰雲端
     let cancelled = false;
     (async () => {
       const cloud = await fetchContractFromSheet(tenant.id);
@@ -108,6 +112,7 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
 
   // 自動儲存：本機 400ms 防抖；雲端 2 秒防抖（避免逐字打字狂打 API）
   useEffect(() => {
+    if (readOnly) return; // 歷史合約唯讀，不寫入
     if (firstRender.current) { firstRender.current = false; return; }
     if (skipCloudPush.current) { skipCloudPush.current = false; return; }
     const now = new Date().toISOString();
@@ -141,17 +146,18 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
       value={fields[k] ?? ''}
       onChange={e => set(k, e.target.value)}
       placeholder={ph}
+      readOnly={readOnly}
       style={{ width: w }}
       className="inline-block align-baseline border-b border-dashed border-stone-400 bg-transparent text-center text-accent font-bold focus:border-accent outline-none px-1 mx-0.5 text-[13px]"
     />
   );
 
   const ck = (k: string, label: React.ReactNode) => (
-    <label className="inline-flex items-center gap-1 mx-1 cursor-pointer select-none align-baseline whitespace-nowrap">
+    <label className={`inline-flex items-center gap-1 mx-1 select-none align-baseline whitespace-nowrap ${readOnly ? '' : 'cursor-pointer'}`}>
       <input
         type="checkbox"
         checked={!!fields[k]}
-        onChange={e => set(k, e.target.checked)}
+        onChange={e => { if (!readOnly) set(k, e.target.checked); }}
         className="rounded border-stone-400 text-accent focus:ring-accent w-3.5 h-3.5"
       />
       <span>{label}</span>
@@ -175,8 +181,10 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
           <div className="flex items-center gap-2 min-w-0">
             <ScrollText size={18} className="text-accent shrink-0" />
             <div className="min-w-0">
-              <h3 className="font-serif text-sm sm:text-base font-bold text-ink truncate">住宅租賃契約書 · {tenant.name}</h3>
-              <p className="text-[10px] text-ink-mute">內政部 113.7.8 修正範本 · 點欄位即可填寫，自動儲存</p>
+              <h3 className="font-serif text-sm sm:text-base font-bold text-ink truncate">
+                住宅租賃契約書 · {tenant.name}{readOnly && <span className="ml-2 text-[10px] font-bold text-white bg-stone-500 px-2 py-0.5 rounded-full align-middle">歷史合約（唯讀）</span>}
+              </h3>
+              <p className="text-[10px] text-ink-mute">{readOnly ? '續約前封存的舊合約，僅供檢視與列印' : '內政部 113.7.8 修正範本 · 點欄位即可填寫，自動儲存'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -501,6 +509,7 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ tenant, onClose }) => {
                 value={fields['special'] ?? ''}
                 onChange={e => set('special', e.target.value)}
                 rows={3}
+                readOnly={readOnly}
                 placeholder="例如：不可養寵物、不可開伙…（無則免填）"
                 className="w-full border border-line rounded-lg p-2.5 text-[13px] bg-surface focus:ring-2 focus:ring-accent/20 outline-none resize-y"
               />

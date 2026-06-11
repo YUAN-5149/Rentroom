@@ -2,7 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { PaymentRecord, PaymentStatus, Tenant } from '../types';
-import { FileSpreadsheet, Home, Trash2, AlertTriangle, Plus, X, Save, Calendar, CalendarPlus, CheckCircle2 } from 'lucide-react';
+import { FileSpreadsheet, Home, Trash2, AlertTriangle, Plus, X, Save, Calendar, CalendarPlus, CheckCircle2, Receipt } from 'lucide-react';
+import ReceiptModal from './ReceiptModal';
 
 interface FinancialsProps {
   payments: PaymentRecord[];
@@ -16,6 +17,7 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
   const [filter, setFilter] = useState<PaymentStatus | 'ALL'>('ALL');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [receiptTarget, setReceiptTarget] = useState<PaymentRecord | null>(null);
 
   // Add Form State
   const [newPayment, setNewPayment] = useState<Partial<PaymentRecord>>({
@@ -179,9 +181,16 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
                   </div>
                   <span className="text-sm font-bold text-ink">{payment.tenantName}</span>
                 </div>
-                <button onClick={() => setDeleteTargetId(payment.id)} className="text-ink-mute hover:text-rose-500 transition p-1">
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-1">
+                  {payment.status === PaymentStatus.PAID && (
+                    <button onClick={() => setReceiptTarget(payment)} className="text-ink-mute hover:text-accent transition p-1" title="開立收據">
+                      <Receipt size={16} />
+                    </button>
+                  )}
+                  <button onClick={() => setDeleteTargetId(payment.id)} className="text-ink-mute hover:text-rose-500 transition p-1">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -276,9 +285,20 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
                         </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-ink-mute">
-                        <button onClick={() => setDeleteTargetId(payment.id)} className="hover:text-rose-600 transition p-2">
-                            <Trash2 size={18} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            {payment.status === PaymentStatus.PAID && (
+                                <button
+                                    onClick={() => setReceiptTarget(payment)}
+                                    className="flex items-center gap-1 text-xs text-ink-soft hover:text-accent border border-line hover:border-accent rounded-md px-2 py-1.5 font-bold transition"
+                                    title="開立繳費收據"
+                                >
+                                    <Receipt size={13} /> 收據
+                                </button>
+                            )}
+                            <button onClick={() => setDeleteTargetId(payment.id)} className="hover:text-rose-600 transition p-2">
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
                     </td>
                     </tr>
                 );
@@ -292,6 +312,15 @@ const Financials: React.FC<FinancialsProps> = ({ payments, tenants, onUpdatePaym
             </table>
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      {receiptTarget && (
+        <ReceiptModal
+          payment={receiptTarget}
+          roomNumber={getTenantInfo(receiptTarget.tenantId).roomNumber}
+          onClose={() => setReceiptTarget(null)}
+        />
+      )}
 
       {/* Generate Monthly Rent Modal */}
       {isGenModalOpen && (
